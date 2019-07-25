@@ -56,7 +56,7 @@
 NRF_LOG_MODULE_REGISTER();
 
 /* NFC tools Android application package name */
-static const uint8_t m_android_package_name[] = {'c','o','m','.','o','t','k','.','o','t','k','a','p','p'};
+static const uint8_t m_android_package_name[] = {'c','o','m','.','c','y','p','h','e','r','e','c','o','.','o','p','e','n','t','u','r','n','k','e','y'};
 static const uint8_t en_code[] = {'e', 'n'};
 
 static bool m_nfc_started = false;                  /* (True), if NFC is running. Default: (False) */

@@ -54,6 +54,7 @@
 
 	/* Pin definition. */
 	#define OTK_PIN_FPS_TOUCHED                     (23)
+	#define OTK_PIN_FPS_PWR_EN                      (22) /* Dummy */
 	#define OTK_PIN_FPS_UART_RX                     (25)
 	#define OTK_PIN_FPS_UART_TX                     (24)
 	/* LED definition. */

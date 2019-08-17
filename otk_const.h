@@ -51,7 +51,7 @@
 /* Prompt labels */
 #define OTK_LABEL_APP_URI           "APP_URI"
 #define OTK_LABEL_MINT_INFO         "Mint_Information"
-#define OTK_LABEL_LOCK_STATE        "Lock_State"
+#define OTK_LABEL_OTK_STATE         "OTK_State"
 #define OTK_LABEL_PUBLIC_KEY        "Public_Key"
 #define OTK_LABEL_SESSION_DATA      "Session_Data"
 #define OTK_LABEL_SESSION_ID        "Session_ID"
@@ -73,20 +73,20 @@ typedef enum {
 /* Return value enumeration. */
 typedef enum {
     OTK_ERROR_NO_ERROR = 0,
-    OTK_ERROR_FPS_NO_MATCH = 1 << 0,
-    OTK_ERROR_NFC_INVALID_REQUEST = 1 << 1,
-    OTK_ERROR_NFC_INVALID_SIGN_DATA = 1 << 2,
-    OTK_ERROR_NFC_SIGN_FAIL = 1 << 3,
-    OTK_ERROR_NFC_TOO_MANY_SIGNATURES = 1 << 4,
-    OTK_ERROR_INIT_FPS = 1 << 5,
-    OTK_ERROR_INIT_NFC = 1 << 6,
-    OTK_ERROR_INIT_CRYPTO = 1 << 7,
-    OTK_ERROR_INIT_KEY = 1 << 8,
-    OTK_ERROR_INIT_PWRMGMT = 1 << 9,
-    OTK_ERROR_INIT_UART = 1 << 10,
-    OTK_ERROR_INIT_TIMER = 1 << 11,
-    OTK_ERROR_INIT_LED = 1 << 12,
-    OTK_ERROR_UNKNOWN = 1 << 31
+    OTK_ERROR_AUTH_FAILED,
+    OTK_ERROR_NFC_INVALID_REQUEST,
+    OTK_ERROR_NFC_INVALID_SIGN_DATA,
+    OTK_ERROR_NFC_SIGN_FAIL,
+    OTK_ERROR_NFC_TOO_MANY_SIGNATURES,
+    OTK_ERROR_INIT_FPS,
+    OTK_ERROR_INIT_NFC,
+    OTK_ERROR_INIT_CRYPTO,
+    OTK_ERROR_INIT_KEY,
+    OTK_ERROR_INIT_PWRMGMT,
+    OTK_ERROR_INIT_UART,
+    OTK_ERROR_INIT_TIMER,
+    OTK_ERROR_INIT_LED,
+    OTK_ERROR_UNKNOWN
 } OTK_Error;
 #endif
 

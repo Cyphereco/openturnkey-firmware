@@ -47,12 +47,12 @@
 typedef enum {
     NFC_RECORD_DEF_APP_URI = 0,         /* App URI record. */
     NFC_RECORD_DEF_MINT_INFO,           /* OTK Mint information. */
-    NFC_RECORD_DEF_LOCK_STATE,          /* OTK lock state, 0 - unlocked, 1 - locked. */
+    NFC_RECORD_DEF_OTK_STATE,          /* OTK lock state, 0 - unlocked, 1 - locked. */
     NFC_RECORD_DEF_PUBLIC_KEY,          /* OTK derivative key's public key, compressed hex. */
     NFC_RECORD_DEF_SESSION_DATA,        /* OTK session data, dynamic content based on conditions. */
     NFC_RECORD_DEF_SESSION_SIGNATURE,   /* Signature of session data signed by derivative public key. */
     NFC_RECORD_DEF_LAST,                /* Not used, for completion only. */
-} NFC_RECORD_DEF_Def;
+} NFC_RECORD_DEF;
 
 #define NFC_MAX_RECORD_COUNT  NFC_RECORD_DEF_LAST  /* Maximum NFC output records. */
 
@@ -70,7 +70,7 @@ typedef enum {
     NFC_REQUEST_DEF_DATA,               /* Request data, mandator/optional based on request command. */
     NFC_REQUEST_DEF_OPTION,             /* Request option, optional. */
     NFC_REQUEST_DEF_LAST                /* Not used, for completion only. */
-} NFC_RequestdDef;
+} NFC_REQUEST_DEF;
 
 #define NFC_MAX_REQUEST_COUNT  NFC_REQUEST_DEF_LAST  /* Maximum NFC output records. */
 
@@ -85,10 +85,33 @@ typedef enum {
     NFC_REQUEST_CMD_SIGN,               /* 163 / 0xA3, Sign external data (32 bytes hash data), taking request option: 1/Using master key, 0/Using derivated key(default), OTK (pre)authorization is required. */  
     NFC_REQUEST_CMD_SET_KEY,            /* 164 / 0xA4, Set/chagne derivative KEY (path), OTK (pre)authorization is required. */ 
     NFC_REQUEST_CMD_SET_PIN,            /* 165 / 0xA5, Set/change secure PIN setting, OTK (pre)authorization is required. */ 
-    NFC_REQUEST_CMD_PRE_AUTH_WITH_PIN,  /* 166 / 0xA6, Pre-authorize OTK with secure PIN via NFC request. */ 
-    NFC_REQUEST_CMD_SET_NOTE,           /* 167 / 0xA7, Set customized user note. */ 
-    NFC_REQUEST_CMD_LAST                /* 168 / 0xA8, Not used, only for completion. */ 
-} NFC_RequestCommand;
+    NFC_REQUEST_CMD_SET_NOTE,           /* 166 / 0xA6, Set customized user note. */ 
+    NFC_REQUEST_CMD_CANCEL,             /* 167 / 0xA7, Cancel previous command request. */ 
+    NFC_REQUEST_CMD_LAST                /*  -- /, Not used, only for completion. */ 
+} NFC_REQUEST_COMMAND;
+
+/**
+ * @brief NFC command response definitions.
+ */
+typedef enum {
+    NFC_CMD_EXEC_NA = 0,            /* 0, Command not applicable. */ 
+    NFC_CMD_EXEC_SUCCESS,           /* 1, Command executed successfully. */ 
+    NFC_CMD_EXEC_FAIL,              /* 2, Command executed failed. */  
+    NFC_CMD_EXEC_LAST               /* -, Not used, only for completion. */ 
+} NFC_COMMAND_EXEC_STATE;
+
+/**
+ * @brief NFC command failure reason definitions.
+ */
+typedef enum {
+    NFC_REASON_INVALID = 0x00,  /*   0 / 0x00, Invalid,  For check purpose. */ 
+    NFC_REASON_TIMEOUT = 0xC0,  /* 192 / 0xC0, Enroll fingerpint on OTK. */ 
+    NFC_REASON_AUTH_FAILED,     /* 193 / 0xC1, Erase enrolled fingerprint and reset secure PIN to default, OTK (pre)authorization is required. */  
+    NFC_REASON_CMD_INVALID,     /* 194 / 0xC2, Present master/derivative extend keys and derivative path and secure PIN code, OTK (pre)authorization is required. */  
+    NFC_REASON_PARAM_INVALID,   /* 195 / 0xC3, Present master/derivative extend keys and derivative path and secure PIN code, OTK (pre)authorization is required. */  
+    NFC_REASON_PARAM_MISSING,   /* 196 / 0xC4, Present master/derivative extend keys and derivative path and secure PIN code, OTK (pre)authorization is required. */  
+    NFC_REASON_LAST = 0xFF      /* 255 / 0xFF, Not used, only for completion. */ 
+} NFC_COMMAND_EXEC_FAILURE_REASON;
 
 /**
  * @brief Initialze NFC interface.

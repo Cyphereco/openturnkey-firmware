@@ -61,7 +61,6 @@ static uint16_t          m_batt_lvl_in_milli_volts; //!< Current battery level.
 
 static bool m_otk_isLocked = false;
 static bool m_otk_isAuthorized = false;
-static char m_request_data[NFC_REQUEST_DATA_BUF_SZ] = {0};
 
 #ifndef DISABLE_FPS
 static void otk_fps_exec_result_led_update(OTK_Return ret);
@@ -345,7 +344,7 @@ void OTK_lock()
 #ifndef DISABLE_FPS    
     otk_fps_exec_result_led_update(FPS_captureAndEnroll());
 #endif
-    //OTK_shutdown(OTK_ERROR_NO_ERROR, true);       
+    OTK_shutdown(OTK_ERROR_NO_ERROR, true);       
 }
 
 
@@ -360,9 +359,6 @@ void OTK_unlock()
         return;
     }
 
-    if (!OTK_isAuthorized()) {
-        OTK_authorization();
-    }
     if (OTK_isAuthorized()) {
 #ifndef DISABLE_FPS        
         OTK_Return ret = FPS_eraseAll();
@@ -373,15 +369,15 @@ void OTK_unlock()
         otk_fps_exec_result_led_update(ret);
 #endif        
     }
-    //OTK_shutdown(OTK_ERROR_NO_ERROR, true);           
+    OTK_shutdown(OTK_ERROR_NO_ERROR, true);           
 }
 
-void OTK_authorization() 
+void OTK_fpValidate() 
 {
-    OTK_LOG_DEBUG("Executing OTK_authorization");
+    OTK_LOG_DEBUG("Executing OTK_fpValidate");
     if (!OTK_isAuthorized()) {
         if (!OTK_isLocked()) {
-            OTK_LOG_ERROR("OTK_authorization requires OTK_lock first!");
+            OTK_LOG_ERROR("OTK_fpValidate requires OTK_lock first!");
             OTK_shutdown(OTK_ERROR_NFC_INVALID_REQUEST, false);
             return;
         }
@@ -393,20 +389,17 @@ void OTK_authorization()
         }
         else {
             /* Match FP failed, shutdown to protect OTK. */
-            OTK_shutdown(OTK_ERROR_FPS_NO_MATCH, false);
+            OTK_shutdown(OTK_ERROR_AUTH_FAILED, false);
         }
 #endif        
     }
-
+    NFC_stop(true);
     OTK_standby();
 }
 
-void OTK_setKey()
+void OTK_setKey(char *strIn)
 {
     OTK_LOG_DEBUG("Executing OTK_setKey");
-    if (!OTK_isAuthorized()) {
-        OTK_authorization();
-    }
 
     int idx = 0;
     char *ptr;
@@ -419,9 +412,9 @@ void OTK_setKey()
             newPath.derivativeIndex[idx] = 0;
         }
 
-        if (strlen(m_request_data) > 0) {
+        if (strlen(strIn) > 0) {
             idx = 0;
-            str = strtok(m_request_data, delim);
+            str = strtok(strIn, delim);
             while(str != NULL)
             {
                 uint32_t ret = strtoul(str, &ptr, 10);
@@ -442,64 +435,49 @@ void OTK_setKey()
         KEY_setNewDerivativePath(&newPath);
         KEY_recalcDerivative();
     }
-    //OTK_shutdown(OTK_ERROR_NO_ERROR, false);
 }
 
-void OTK_setPin()
+void OTK_setPin(char *strIn)
 {
     OTK_LOG_DEBUG("Executing OTK_setPin");
     uint32_t ret;
     char     *ptr;
 
-    if (!OTK_isAuthorized()) {
-        OTK_authorization();
-    }
     if (OTK_isAuthorized()) {
-        if (strlen(m_request_data) > 0) {
-            ret = strtoul(m_request_data, &ptr, 10);
+        if (strlen(strIn) > 0) {
+            ret = strtoul(strIn, &ptr, 10);
             if (strlen(ptr) == 0) {
                 KEY_setPin(ret);
             }        
         }
     }
-    //OTK_shutdown(OTK_ERROR_NO_ERROR, false);
 }
 
-void OTK_preauthWzPin()
+void OTK_pinValidate(char *strIn)
 {
-    OTK_LOG_DEBUG("Executing OTK_preauthWzPin");
-    uint32_t ret;
+    OTK_LOG_DEBUG("Executing OTK_pinValidate");
+    uint32_t ret = 0;
     char     *ptr;
+    char     *strPin = strstr(strIn, "pin=");
 
-    if (strlen(m_request_data) > 0) {
-        ret = strtoul(m_request_data, &ptr, 10);
-        if (strlen(ptr) == 0) {
-            if (KEY_getPin() == ret) {
-                m_otk_isAuthorized = true;
-            }
-        }        
-    }
-    OTK_standby();    
-}
+    strPin += strlen("pin=");
 
-void OTK_setNote()
-{
-    OTK_LOG_DEBUG("Executing OTK_setNote");
-
-    if (!OTK_isAuthorized()) {
-        OTK_authorization();
-    }
-    if (OTK_isAuthorized()) {
-        if (strlen(m_request_data) > 0  && strlen(m_request_data) < 40) {
-            KEY_setKeyNote(m_request_data);
+    if (strlen(strPin) > 0) {
+        ret = strtoul(strPin, &ptr, 10);
+        if (KEY_getPin() == ret) {
+            m_otk_isAuthorized = true;
+            OTK_LOG_DEBUG("PIN Valid!");
+            return;
         }
     }
-    //OTK_shutdown(OTK_ERROR_NO_ERROR, false);
+    OTK_LOG_ERROR("PIN Invalid: %i", ret);   
+    m_otk_isAuthorized = false;
 }
 
-void OTK_setReqestData(char *data_ptr, int data_len)
+void OTK_setNote(char *str)
 {
-    sprintf(m_request_data, "%s", data_ptr);
+    OTK_LOG_DEBUG("Executing OTK_setNote");
+    KEY_setKeyNote(str);
 }
 
 char* OTK_battLevel()

@@ -481,7 +481,7 @@ void fps_longTouchDetector(
                 _longTouchCmdExecuting = true;
                 OTK_pause();
                 if (OTK_isLocked()) {
-                    OTK_authorization();
+                    OTK_fpValidate();
                 }
                 else {
                     OTK_lock();

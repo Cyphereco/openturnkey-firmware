@@ -73,36 +73,29 @@ void OTK_unlock(void);
 /* OTK_authorization
  * start fingerprint authorization
  */
-void OTK_authorization(void);
+void OTK_fpValidate(void);
 
 /* OTK_setKey
  * configure the key path with the input index sequence separated by comma (,)
  * i.e. 1,2,3,4,5
  * if a child index is 0, it means to get a random child index
  */
-void OTK_setKey(void);
+void OTK_setKey(char *strIn);
 
 /* OTK_setPin
  * set the OTK PIN as user's input number
  */
-void OTK_setPin(void);
+void OTK_setPin(char *strIn);
 
-/* OTK_preauthWzPin
+/* OTK_pinValidate
  * start fps capture, set led cadence, set timer
  */
-void OTK_preauthWzPin(void);
+void OTK_pinValidate(char *strIn);
 
 /* OTK_setNote
  * set Key Note with the customized input string
  */
-void OTK_setNote(void);
-
-/* OTK_setReqestData
- * copy NFC request data to buffer
- */
-void OTK_setReqestData(
-	char *data_ptr, 
-	int data_len);
+void OTK_setNote(char *strIn);
 
 /* OTK_battLevel
  * Return OTK battery level

@@ -34,6 +34,7 @@ make clean
 Copy armgcc/_build/nrf52832_xxaa.hex to the JLINK flash disk of the development board. More details please check http://www.nordicsemi.com/eng/Products/Getting-started-with-the-nRF52-Development-Kit
 
 # NFC Record Format Example / Explanation:
+```
 Record 1 (Binary/Software URI): com.cyphereco.openturnkey
 Record 2 (Text/Device Information):
     Key Mint: Cyphereco OU
@@ -54,6 +55,7 @@ Record 5 (Text/Session Data):
     1LB231Bp3Lx4Vus...
 Record 6 (Text/Session Data Signature):
     <Signature>
+```
 
 # NFC Request Command Requirements:
 1. Session ID must be correct for each session.
@@ -63,13 +65,16 @@ Record 6 (Text/Session Data Signature):
 5. Request option param is optional, but if it is used and there is no request data needed, the client software still need to put some data in request data such as 0. (NFC record is parse in sequential order).
 
 # NFC Request Command Example:
+```
 Record 1 (Text/Session ID): 12345 
 Record 2 (Text/Request ID): 54321
 Record 3 (Text/Request Command): 163
 Record 4 (Text/Request Data): <hash_value>
 Record 5 (Text/Request Options): key=1,pin=99999999
+```
 
 # List of NFC Commands:
+```
 typedef enum {
     NFC_REQUEST_CMD_INVALID = 0,        /* 0 / 0x0, Invalid,  For check purpose. */ 
     NFC_REQUEST_CMD_LOCK = 0xA0,        /* 160 / 0xA0, Enroll fingerpint on OTK. */ 
@@ -82,7 +87,7 @@ typedef enum {
     NFC_REQUEST_CMD_CANCEL,             /* 167 / 0xA7, Cancel previous command request. */ 
     NFC_REQUEST_CMD_LAST                /*  -- /, Not used, only for completion. */ 
 } NFC_REQUEST_COMMAND;
-
+```
 
 # OpenTurnKey Usage:
 1. Fingerprint Pre-authenticated Mode.

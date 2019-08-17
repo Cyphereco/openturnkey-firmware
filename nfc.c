@@ -46,7 +46,7 @@
 /**
  * @brief Defined for development test purpose.
  */
-#define DEV_TEST (false)
+#define DEV_TEST (true)
 
 #if defined NRF_LOG_MODULE_NAME
 #undef NRF_LOG_MODULE_NAME
@@ -244,7 +244,7 @@ static void nfc_callback(
                        /* Parse Option Params and check if PIN code is submitted and matched
                         * Request Options are order irrelavant params separated by comma
                         * as in the following foramt:
-                        * key=master,pin=99999999
+                        * key=0,pin=99999999
                         */
                         OTK_pinValidate(m_nfc_request_opt_buf);
                         OTK_LOG_DEBUG("PIN validation (%d)", OTK_isAuthorized());
@@ -540,7 +540,10 @@ static OTK_Return nfc_setRecords()
             char delim[] = "\n";
 
             /* Check request option, 1 - using master key, 0 - using derivative (default, if not presented) */
-            bool _useMaster = (1 == nfc_strToUint32(m_nfc_request_opt_buf));
+            char    *ptrTail;
+            char    *strPos = strstr(m_nfc_request_opt_buf, "key=") + strlen("key=");
+            bool    _useMaster = (1 == strtoul(strPos, &ptrTail, 10));
+
             char *_sigPubKey = KEY_getHexPublicKey(_useMaster);
             _sessDataLen = sprintf(_sessData, "%s<%s>\r\n%s\r\n", _sessData, OTK_LABEL_PUBLIC_KEY, _sigPubKey);
 

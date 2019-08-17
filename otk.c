@@ -457,13 +457,13 @@ void OTK_pinValidate(char *strIn)
 {
     OTK_LOG_DEBUG("Executing OTK_pinValidate");
     uint32_t ret = 0;
-    char     *ptr;
-    char     *strPin = strstr(strIn, "pin=");
+    char     *ptrTail;
+    char     *strPos = strstr(strIn, "pin=");
 
-    strPin += strlen("pin=");
+    strPos += strlen("pin=");
 
-    if (strlen(strPin) > 0) {
-        ret = strtoul(strPin, &ptr, 10);
+    if (strlen(strPos) > 0) {
+        ret = strtoul(strPos, &ptrTail, 10);
         if (KEY_getPin() == ret) {
             m_otk_isAuthorized = true;
             OTK_LOG_DEBUG("PIN Valid!");

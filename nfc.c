@@ -46,7 +46,7 @@
 /**
  * @brief Defined for development test purpose.
  */
-#define DEV_TEST (true)
+#define DEV_TEST (false)
 
 #if defined NRF_LOG_MODULE_NAME
 #undef NRF_LOG_MODULE_NAME

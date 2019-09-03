@@ -105,11 +105,11 @@ typedef enum {
  */
 typedef enum {
     NFC_REASON_INVALID = 0x00,  /*   0 / 0x00, Invalid,  For check purpose. */ 
-    NFC_REASON_TIMEOUT = 0xC0,  /* 192 / 0xC0, Enroll fingerpint on OTK. */ 
-    NFC_REASON_AUTH_FAILED,     /* 193 / 0xC1, Erase enrolled fingerprint and reset secure PIN to default, OTK (pre)authorization is required. */  
-    NFC_REASON_CMD_INVALID,     /* 194 / 0xC2, Present master/derivative extend keys and derivative path and secure PIN code, OTK (pre)authorization is required. */  
-    NFC_REASON_PARAM_INVALID,   /* 195 / 0xC3, Present master/derivative extend keys and derivative path and secure PIN code, OTK (pre)authorization is required. */  
-    NFC_REASON_PARAM_MISSING,   /* 196 / 0xC4, Present master/derivative extend keys and derivative path and secure PIN code, OTK (pre)authorization is required. */  
+    NFC_REASON_TIMEOUT = 0xC0,  /* 192 / 0xC0, Command timeout. */ 
+    NFC_REASON_AUTH_FAILED,     /* 193 / 0xC1, Authentication failed. */  
+    NFC_REASON_CMD_INVALID,     /* 194 / 0xC2, Invalid command. */  
+    NFC_REASON_PARAM_INVALID,   /* 195 / 0xC3, Invalid parameter. */  
+    NFC_REASON_PARAM_MISSING,   /* 196 / 0xC4, Mandatory parameter not presented. */  
     NFC_REASON_LAST = 0xFF      /* 255 / 0xFF, Not used, only for completion. */ 
 } NFC_COMMAND_EXEC_FAILURE_REASON;
 

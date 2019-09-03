@@ -43,11 +43,6 @@
 #include "crypto.h"
 #include "key.h"
 
-/**
- * @brief Defined for development test purpose.
- */
-#define DEV_TEST (false)
-
 #if defined NRF_LOG_MODULE_NAME
 #undef NRF_LOG_MODULE_NAME
 #endif
@@ -64,6 +59,7 @@ static bool m_nfc_restart_flag = false;             /* (True), whether to restar
 static bool m_nfc_polling_started = false;          /* (True), NFC tag is polled */
 static bool m_nfc_read_finished = false;            /* (True), if NFC data has been read.*/
 static bool m_nfc_output_protect_data = false;      /* (True), if protected data has been read. */
+static bool m_nfc_more_cmd = false;                 /* (True), if there is more command to come.*/
 static uint8_t m_nfc_auth_failure_counts = 0;
 
 static NFC_REQUEST_COMMAND m_nfc_request_command = NFC_REQUEST_CMD_INVALID;                   /* Vairable to store passing in reqeuset command. */
@@ -308,7 +304,7 @@ static void nfc_callback(
             if (m_nfc_read_finished) {
                 m_nfc_read_finished = false;
 
-                if (m_nfc_output_protect_data) {
+                if (m_nfc_output_protect_data && !m_nfc_more_cmd) {
                     OTK_LOG_DEBUG("Protected data is read, prepare shutdown.");
                     OTK_shutdown(OTK_ERROR_NO_ERROR, false);
                     return;
@@ -380,7 +376,7 @@ static void nfc_callback(
                     switch (_record_idx) {
                         case NFC_REQUEST_DEF_SESSION_ID:
                             _u32val = nfc_strToUint32(_recordPayload_data);
-#if !(DEV_TEST)                           
+#ifndef DEBUG                          
                             if (_u32val != m_nfc_session_id) {
                                 OTK_LOG_ERROR("Invalid request session ID!! (%s)", _recordPayload_data);
                                 _invalidRequest = true;                                
@@ -419,8 +415,16 @@ static void nfc_callback(
                             }
                             break;
                         case NFC_REQUEST_DEF_OPTION:
+                            m_nfc_more_cmd = false;
                             if (strlen(_recordPayload_data) > 0 && strlen(_recordPayload_data) < NFC_REQUEST_OPT_BUF_SZ) {
-                                sprintf(m_nfc_request_opt_buf, "%s", _recordPayload_data);                              
+                                sprintf(m_nfc_request_opt_buf, "%s", _recordPayload_data);   
+
+                                char *strPos = strstr(m_nfc_request_opt_buf, "more=");
+                                if (strPos != NULL) {
+                                    char *ptrTail;                           
+                                    strPos += strlen("more=");
+                                    m_nfc_more_cmd = (1 == strtoul(strPos, &ptrTail, 10));
+                                }
                             }
                             break;
                         default:
@@ -487,6 +491,9 @@ static OTK_Return nfc_setRecords()
     char _serial[11] = {0};
     memcpy(_serial, ptr_mstPubKey + strlen(ptr_mstPubKey) - 10, 10);
     sprintf(_mintInfo, "%s\r\nSerial No.: %s", OTK_MINT_INFO, _serial);
+#ifdef DEBUG    
+    sprintf(_mintInfo, "%s (DEBUG ONLY)", OTK_MINT_INFO);
+#endif    
     sprintf(_mintInfo, "%s\r\nBattery Level: %s / %d mV", _mintInfo, OTK_battLevel(), OTK_battVoltage());
     sprintf(_mintInfo, "%s\r\nNote: \r\n%s", _mintInfo, KEY_getKeyNote());
 
@@ -540,9 +547,13 @@ static OTK_Return nfc_setRecords()
             char delim[] = "\n";
 
             /* Check request option, 1 - using master key, 0 - using derivative (default, if not presented) */
-            char    *ptrTail;
-            char    *strPos = strstr(m_nfc_request_opt_buf, "key=") + strlen("key=");
-            bool    _useMaster = (1 == strtoul(strPos, &ptrTail, 10));
+            bool    _useMaster = false;
+            char    *strPos = strstr(m_nfc_request_opt_buf, "key=");
+            if (strPos != NULL) {
+                char    *ptrTail;
+                strPos += strlen("key=");
+                _useMaster = (1 == strtoul(strPos, &ptrTail, 10));
+            }
 
             char *_sigPubKey = KEY_getHexPublicKey(_useMaster);
             _sessDataLen = sprintf(_sessData, "%s<%s>\r\n%s\r\n", _sessData, OTK_LABEL_PUBLIC_KEY, _sigPubKey);
@@ -592,6 +603,7 @@ static OTK_Return nfc_setRecords()
             OTK_pause();
             LED_setCadenceType(LED_CAD_RESULT_READY);
             LED_cadence_start();
+
             m_nfc_output_protect_data = true;
         }
         else if (NFC_REQUEST_CMD_SHOW_KEY == m_nfc_request_command) {

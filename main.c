@@ -51,6 +51,9 @@ int main(void)
     OTK_Error err = OTK_init();
     if (OTK_ERROR_NO_ERROR == err) {
         NRF_LOG_INFO("OTK Initialized Successfully!");
+#ifdef DEBUG
+        NRF_LOG_INFO("Running DEBUG version!!");
+#endif        
     }
     else {
         OTK_LOG_ERROR("OTK Initialized Failed, system will shutdown in 1 second!!");

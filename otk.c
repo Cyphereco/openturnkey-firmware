@@ -460,16 +460,19 @@ void OTK_pinValidate(char *strIn)
     char     *ptrTail;
     char     *strPos = strstr(strIn, "pin=");
 
-    strPos += strlen("pin=");
+    if (strPos !=NULL) {
+        strPos += strlen("pin=");
 
-    if (strlen(strPos) > 0) {
-        ret = strtoul(strPos, &ptrTail, 10);
-        if (KEY_getPin() == ret) {
-            m_otk_isAuthorized = true;
-            OTK_LOG_DEBUG("PIN Valid!");
-            return;
-        }
+        if (strlen(strPos) > 0) {
+            ret = strtoul(strPos, &ptrTail, 10);
+            if (KEY_getPin() == ret) {
+                m_otk_isAuthorized = true;
+                OTK_LOG_DEBUG("PIN Valid!");
+                return;
+            }
+        }        
     }
+
     OTK_LOG_ERROR("PIN Invalid: %i", ret);   
     m_otk_isAuthorized = false;
 }

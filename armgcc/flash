@@ -1,0 +1,2 @@
+nrfjprog.exe -f nrf52 --program _build/nrf52832_xxaa.hex --chiperase
+nrfjprog.exe -f nrf52 --reset

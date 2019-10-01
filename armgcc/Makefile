@@ -283,11 +283,11 @@ $(foreach target, $(TARGETS), $(call define_target, $(target)))
 # Flash the program
 flash: $(OUTPUT_DIRECTORY)/nrf52832_xxaa.hex
 	@echo Flashing: $<
-	nrfjprog -f nrf52 --program $< --sectorerase
-	nrfjprog -f nrf52 --reset
+	nrfjprog.exe -f nrf52 --program $< --chiperase
+	nrfjprog.exe -f nrf52 --reset
 
 erase:
-	nrfjprog -f nrf52 --eraseall
+	nrfjprog.exe -f nrf52 --eraseall
 
 SDK_CONFIG_FILE := ../config/sdk_config.h
 CMSIS_CONFIG_TOOL := $(SDK_ROOT)/external_tools/cmsisconfig/CMSIS_Configuration_Wizard.jar

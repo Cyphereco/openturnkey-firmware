@@ -28,7 +28,7 @@ make
 ```
 ## Build source code for debug version (Debug version uses fix seed, which is specified in key.c source code, and will not validate the NFC request session ID.)
 ```Bash
-make
+make debug
 ```
 ## Flash build image (.hex) to the connected OTK device via JLink
 ```Bash

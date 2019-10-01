@@ -22,9 +22,21 @@ Currently only build with GCC is supported. More info for building with GCC plea
 ```Bash
 SDK_ROOT := ../../..
 ```
-## Build source code (option: unittest, debug)
+## Build source code for release version
 ```Bash
 make
+```
+## Build source code for debug version (Debug version uses fix seed, which is specified in key.c source code, and will not validate the NFC request session ID.)
+```Bash
+make
+```
+## Flash build image (.hex) to the connected OTK device via JLink
+```Bash
+make flash
+```
+## Reset the connected OTK device via JLink
+```Bash
+make reset
 ```
 ## Clear built result
 ```Bash

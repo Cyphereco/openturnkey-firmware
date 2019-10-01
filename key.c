@@ -245,7 +245,7 @@ OTK_Return KEY_init()
         /* XXX Here we derive a non-harden child node automatically for now. It should be requested by APP. */
         CRYPTO_generateRandomPath(&_keyObj.path);
 
-#ifdef (defined DEBUG && defined FIX_SEED_INDEX)
+#if (defined DEBUG && defined FIX_SEED_INDEX)
         /* Use index 0 for testing. */
         for (int i = 0; i < CRYPTO_DERIVATIVE_DEPTH; i++) {
             CRYPTO_setDerivativePath(&_keyObj.path, i, 0);

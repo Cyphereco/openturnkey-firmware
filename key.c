@@ -227,7 +227,7 @@ OTK_Return KEY_init()
         }
 
         /* Generate master node from seed. */
-#ifdef FIX_SEED_INDEX
+#if (defined DEBUG && defined FIX_SEED_INDEX)
         OTK_LOG_DEBUG("Generating new master key from FIX seed...");
         CRYPTO_seed _seed;
         memcpy(_seed.octets, _fixSeed[FIX_SEED_INDEX], CRYPTO_SEED_SIZE_OCTET);
@@ -235,7 +235,7 @@ OTK_Return KEY_init()
 #else
         OTK_LOG_DEBUG("Generating new master key from RANDOM seed...");       
         ret = CRYPTO_deriveHdNode(NULL, &_keyObj.master, NULL, NULL);
-#endif /* FIX_SEED_INDEX */      
+#endif /* (defined DEBUG && defined FIX_SEED_INDEX) */      
 
         if (ret != OTK_RETURN_OK) {
             OTK_LOG_ERROR("Failed to generate master node!!");
@@ -245,12 +245,12 @@ OTK_Return KEY_init()
         /* XXX Here we derive a non-harden child node automatically for now. It should be requested by APP. */
         CRYPTO_generateRandomPath(&_keyObj.path);
 
-#ifdef FIX_SEED_INDEX
+#ifdef (defined DEBUG && defined FIX_SEED_INDEX)
         /* Use index 0 for testing. */
         for (int i = 0; i < CRYPTO_DERIVATIVE_DEPTH; i++) {
             CRYPTO_setDerivativePath(&_keyObj.path, i, 0);
         }
-#endif /* FIX_SEED_INDEX */
+#endif /* (defined DEBUG && defined FIX_SEED_INDEX) */
 
         ret = CRYPTO_deriveHdNode(&_keyObj.master, &_keyObj.derivative, &_keyObj.path, NULL);
 

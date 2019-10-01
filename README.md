@@ -26,7 +26,7 @@ SDK_ROOT := ../../..
 ```Bash
 make
 ```
-## Build source code for debug version (Debug version uses fix seed, which is specified in key.c source code, and will not validate the NFC request session ID.)
+## Build source code for debug version (Debug version uses fix seed, which is specified in key.c source code, and will not validate the NFC request session ID. And a label '(DEBUG)' will be indicated in teh F/W version in NFC records.)
 ```Bash
 make debug
 ```

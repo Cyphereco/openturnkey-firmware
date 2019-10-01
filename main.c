@@ -113,7 +113,7 @@ int main(void)
     if (_pwrLvl < 3550) {
         LED_blink(_led, 3);
     }
-#if 0   /* remove blink twice indication to simplify the LED alert states. %/ 
+#if 0   /* remove blink twice indication to simplify the LED alert states. */ 
     else if (_pwrLvl < 3650) {
         LED_blink(_led, 2);
     }

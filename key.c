@@ -49,7 +49,7 @@
 #define NRF_LOG_MODULE_NAME otk_key
 NRF_LOG_MODULE_REGISTER();
 
-#ifdef FIX_SEED_INDEX
+#if (defined DEBUG && defined FIX_SEED_INDEX)
 static uint8_t _fixSeed[][CRYPTO_SEED_SIZE_OCTET] = {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

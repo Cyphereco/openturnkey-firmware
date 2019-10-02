@@ -26,17 +26,21 @@ SDK_ROOT := ../../..
 ```Bash
 make
 ```
-## Build source code for debug version (Debug version uses fix seed, which is specified in key.c source code, and will not validate the NFC request session ID. And a label '(DEBUG)' will be indicated in teh F/W version in NFC records.)
+## Build source code for debug version.
+A debug version has the following features:
+* A label '(DEBUG)' will be indicated in teh F/W version in NFC records.
+* Uses fix seed, which is specified in key.c source code
+* Will not validate the NFC request session ID. 
 ```Bash
 make debug
 ```
-## Flash build image (.hex) to the connected OTK device via JLink
+## Flash build image (.hex) to the connected OTK device via JLink. (If there is an error, usually it is because of OTK device was powered off, just try again.)
 ```Bash
-make flash
+./flashimg
 ```
 ## Reset the connected OTK device via JLink
 ```Bash
-make reset
+./reset
 ```
 ## Clear built result
 ```Bash

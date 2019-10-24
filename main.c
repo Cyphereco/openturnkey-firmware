@@ -57,6 +57,7 @@ int main(void)
     }
     else {
         OTK_LOG_ERROR("OTK Initialized Failed, system will shutdown in 1 second!!");
+        nrf_delay_ms(1000);
         OTK_shutdown(err, false);
     }
 

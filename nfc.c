@@ -219,6 +219,7 @@ static void nfc_callback(
             if (true == m_nfc_read_finished && m_nfc_request_command != NFC_REQUEST_CMD_INVALID) {
                 OTK_LOG_DEBUG("NFC reader updated with request command (%d)", m_nfc_request_command);;
 
+                static NFC_COMMAND_EXEC_STATE _execState = NFC_CMD_EXEC_SUCCESS;
                 m_nfc_read_finished = false;
 
                 OTK_LOG_DEBUG("Request Received:");
@@ -250,7 +251,13 @@ static void nfc_callback(
                     /* Handling NFC request and set correspondent tasks. */
                     switch (m_nfc_request_command) {
                         case NFC_REQUEST_CMD_UNLOCK:
-                            deferredFunc = OTK_unlock;
+                            if (OTK_isLocked() == false) {
+                                _execState = NFC_CMD_EXEC_FAIL;
+                                m_nfc_cmd_failure_reason = NFC_REASON_UNLOCKED_ALREADY;
+                            }
+                            else {
+                                deferredFunc = OTK_unlock;
+                            }
                             break;
                         case NFC_REQUEST_CMD_SET_KEY:
                             OTK_setKey(m_nfc_request_data_buf);
@@ -261,11 +268,14 @@ static void nfc_callback(
                         case NFC_REQUEST_CMD_SET_NOTE:
                             OTK_setNote(m_nfc_request_data_buf);
                             break;
-                        case NFC_REQUEST_CMD_INVALID:
                         case NFC_REQUEST_CMD_LOCK:
                         case NFC_REQUEST_CMD_SHOW_KEY:
                         case NFC_REQUEST_CMD_SIGN:  
                         case NFC_REQUEST_CMD_CANCEL:
+                                _execState = NFC_CMD_EXEC_FAIL;
+                                m_nfc_cmd_failure_reason = NFC_REASON_CMD_INVALID;
+                            break;
+                        case NFC_REQUEST_CMD_INVALID:
                         case NFC_REQUEST_CMD_LAST:         
                             break;                   
                     }
@@ -275,7 +285,7 @@ static void nfc_callback(
                         APP_ERROR_CHECK(app_sched_event_put(NULL, 0, nfc_execDeferredFunc));
                     }            
 
-                    m_nfc_cmd_exec_state = NFC_CMD_EXEC_SUCCESS;
+                    m_nfc_cmd_exec_state = _execState;
                 }
                 else {
                     m_nfc_cmd_exec_state = NFC_CMD_EXEC_FAIL;

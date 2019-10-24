@@ -215,7 +215,7 @@ OTK_Return KEY_init()
         }
     }           
     else {
-        OTK_LOG_DEBUG("FILE_load failed, file not existed!!");
+        OTK_LOG_DEBUG("FILE_load failed, file not existed. Generating new keys.");
 
         /* If FILE_load failed, file has not been created yet, OTK is new
          *  - Clear up FPS,

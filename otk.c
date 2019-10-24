@@ -336,7 +336,7 @@ void OTK_lock()
 
     if (OTK_isLocked()) {
         OTK_LOG_ERROR("OTK is locked already!");
-        OTK_shutdown(OTK_ERROR_NFC_INVALID_REQUEST, false);
+        //OTK_shutdown(OTK_ERROR_NFC_INVALID_REQUEST, false);
         return;
     }
     LED_setCadenceType(LED_CAD_FPS_CAPTURING);
@@ -355,7 +355,7 @@ void OTK_unlock()
 
     if (!OTK_isLocked()) {
         OTK_LOG_ERROR("OTK is unlocked already!");
-        OTK_shutdown(OTK_ERROR_NFC_INVALID_REQUEST, false);
+        //OTK_shutdown(OTK_ERROR_NFC_INVALID_REQUEST, false);
         return;
     }
 
@@ -369,7 +369,7 @@ void OTK_unlock()
         otk_fps_exec_result_led_update(ret);
 #endif        
     }
-    OTK_shutdown(OTK_ERROR_NO_ERROR, true);           
+    //OTK_shutdown(OTK_ERROR_NO_ERROR, true);           
 }
 
 void OTK_fpValidate() 

@@ -367,6 +367,10 @@ void OTK_unlock()
             ret &= KEY_setKeyNote(empty_str);
         }
         otk_fps_exec_result_led_update(ret);
+
+        m_otk_isLocked = (FPS_getUserNum() > 0) ? true : false;        
+        m_otk_isAuthorized = false;
+        OTK_standby();
 #endif        
     }
     //OTK_shutdown(OTK_ERROR_NO_ERROR, true);           
@@ -434,6 +438,9 @@ void OTK_setKey(char *strIn)
 
         KEY_setNewDerivativePath(&newPath);
         KEY_recalcDerivative();
+
+        m_otk_isAuthorized = false;
+        OTK_standby();
     }
 }
 
@@ -448,6 +455,9 @@ void OTK_setPin(char *strIn)
             ret = strtoul(strIn, &ptr, 10);
             if (strlen(ptr) == 0) {
                 KEY_setPin(ret);
+
+                m_otk_isAuthorized = false;
+                OTK_standby();
             }        
         }
     }

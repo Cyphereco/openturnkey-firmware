@@ -248,6 +248,8 @@ static void nfc_callback(
                 }
 
                 if (OTK_isAuthorized()) {
+                    OTK_extend();
+
                     /* Handling NFC request and set correspondent tasks. */
                     switch (m_nfc_request_command) {
                         case NFC_REQUEST_CMD_UNLOCK:
@@ -435,6 +437,9 @@ static void nfc_callback(
                                     char *ptrTail;                           
                                     strPos += strlen("more=");
                                     m_nfc_more_cmd = (1 == strtoul(strPos, &ptrTail, 10));
+                                    if (m_nfc_more_cmd) {
+                                        OTK_extend();
+                                    }
                                 }
                             }
                             break;
@@ -452,6 +457,7 @@ static void nfc_callback(
                     ndef_record_ptr += _descLen;
                     dataLength -= _descLen;
                     _record_idx++;
+                    OTK_extend();
                 } while (dataLength > 0);
             }                
             break;

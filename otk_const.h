@@ -18,13 +18,41 @@
 #ifndef _OTK_CONST_H
 #define _OTK_CONST_H
 
-#define OTK_HW_V_1_2
+#define OTK_HW_V_1_3
+
+#ifdef OTK_HW_V_1_3
+    #define OTK_HW_VER "1.3"
+    #define OTK_FW_VER_CODE "1.2"
+    #define OTK_FW_VER OTK_FW_VER_CODE"."BUILD_NUM
+    #define OTK_MINT_DATE "2019/11/26"
+
+    /* OpenTurnkey Mint Information */
+    #define OTK_MINT_INFO \
+    "Key Mint: Cyphereco OU\r\n" \
+    "Mint Date: " OTK_MINT_DATE "\r\n" \
+    "H/W Version: " OTK_HW_VER "\r\n" \
+    "F/W Version: " OTK_FW_VER
+#endif
 
 #ifdef OTK_HW_V_1_2
     #define OTK_HW_VER "1.2"
     #define OTK_FW_VER_CODE "1.1"
     #define OTK_FW_VER OTK_FW_VER_CODE"."BUILD_NUM
     #define OTK_MINT_DATE "2019/06/09"
+
+    /* OpenTurnkey Mint Information */
+    #define OTK_MINT_INFO \
+    "Key Mint: Cyphereco OU\r\n" \
+    "Mint Date: " OTK_MINT_DATE "\r\n" \
+    "H/W Version: " OTK_HW_VER "\r\n" \
+    "F/W Version: " OTK_FW_VER
+#endif
+
+#ifdef OTK_HW_V_1_1
+    #define OTK_HW_VER "1.1"
+    #define OTK_FW_VER_CODE "1.0"
+    #define OTK_FW_VER OTK_FW_VER_CODE"."BUILD_NUM
+    #define OTK_MINT_DATE "2019/03/01"
 
     /* OpenTurnkey Mint Information */
     #define OTK_MINT_INFO \

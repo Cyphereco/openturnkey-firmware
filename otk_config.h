@@ -27,7 +27,7 @@
 #define LED_TEST (0)
 #define UNITTEST (0)
 
-/* Define OTK_V1_2 for OTK version 1.1 */
+/* Define OTK_V1_2 for OTK version 1.1+ */
 #define OTK_V1_2
 
 #define OTK_LED_BLUE_MASK                       (1 << 0)

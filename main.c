@@ -24,6 +24,7 @@
 
 #include "otk.h"
 #include "led.h"
+#include "key.h"
 #include "pwrmgmt.h"
 #include "unittest.h"
 
@@ -53,11 +54,13 @@ int main(void)
         NRF_LOG_INFO("OTK Initialized Successfully!");
 #ifdef DEBUG
         NRF_LOG_INFO("Running DEBUG version!!");
+        NRF_LOG_INFO("PIN=%i", KEY_getPin());
+        nrf_delay_ms(1000);
 #endif        
     }
     else {
         OTK_LOG_ERROR("OTK Initialized Failed, system will shutdown in 1 second!!");
-        nrf_delay_ms(1000);
+        nrf_delay_ms(5000);
         OTK_shutdown(err, false);
     }
 

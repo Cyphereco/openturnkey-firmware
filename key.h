@@ -29,7 +29,7 @@
  */
 #define KEY_DERIVATIVE  (0)
 #define KEY_MASTER      (1)
-#define KEY_DEFAULT_PIN (99999999)
+#define KEY_DEFAULT_PIN (0xFFFFFFFF)
 #define KEY_NOTE_LENGTH (64)
 
 /**

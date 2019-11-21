@@ -86,7 +86,8 @@ typedef enum {
     NFC_REQUEST_CMD_SET_KEY,            /* 164 / 0xA4, Set/chagne derivative KEY (path), OTK (pre)authorization is required. */ 
     NFC_REQUEST_CMD_SET_PIN,            /* 165 / 0xA5, Set/change secure PIN setting, OTK (pre)authorization is required. */ 
     NFC_REQUEST_CMD_SET_NOTE,           /* 166 / 0xA6, Set customized user note. */ 
-    NFC_REQUEST_CMD_CANCEL,             /* 167 / 0xA7, Cancel previous command request. */ 
+    NFC_REQUEST_CMD_CANCEL,             /* 167 / 0xA7, Cancel previous command request. */
+    NFC_REQUEST_CMD_RESET,              /* 168 / 0xA8, Clear FP and PIN and pick a new random derivative child key. */
     NFC_REQUEST_CMD_LAST                /*  -- /, Not used, only for completion. */ 
 } NFC_REQUEST_COMMAND;
 
@@ -104,15 +105,19 @@ typedef enum {
  * @brief NFC command failure reason definitions.
  */
 typedef enum {
-    NFC_REASON_INVALID = 0x00,  /*   0 / 0x00, Invalid,  For check purpose. */ 
-    NFC_REASON_TIMEOUT = 0xC0,  /* 192 / 0xC0, Command timeout. */ 
-    NFC_REASON_AUTH_FAILED,     /* 193 / 0xC1, Authentication failed. */  
-    NFC_REASON_CMD_INVALID,     /* 194 / 0xC2, Invalid command. */  
-    NFC_REASON_PARAM_INVALID,   /* 195 / 0xC3, Invalid parameter. */  
-    NFC_REASON_PARAM_MISSING,   /* 196 / 0xC4, Mandatory parameter not presented. */ 
-    NFC_REASON_LOCKED_ALREADY,  /* 196 / 0xC5, Device is already locked. */ 
-    NFC_REASON_UNLOCKED_ALREADY,   /* 196 / 0xC5, Device is already locked. */ 
-    NFC_REASON_LAST = 0xFF      /* 255 / 0xFF, Not used, only for completion. */ 
+    NFC_REASON_INVALID = 0x00,          /*   0 / 0x00, Invalid,  For check purpose. */ 
+    NFC_REASON_TIMEOUT = 0xC0,          /* 192 / 0xC0, Command timeout. */ 
+    NFC_REASON_AUTH_FAILED,             /* 193 / 0xC1, Authentication failed. */  
+    NFC_REASON_CMD_INVALID,             /* 194 / 0xC2, Invalid command. */  
+    NFC_REASON_PARAM_INVALID,           /* 195 / 0xC3, Invalid parameter. */  
+    NFC_REASON_PARAM_MISSING,           /* 196 / 0xC4, Mandatory parameter not presented. */ 
+    NFC_REASON_LOCKED_ALREADY,          /* 196 / 0xC5, Device is already locked. */ 
+    NFC_REASON_UNLOCKED_ALREADY,        /* 196 / 0xC6, Device is already unlocked. */ 
+    NFC_REASON_PIN_UNSET,               /* 197 / 0xC7, PIN code is not set yet. */ 
+    NFC_REASON_INVALID_PIN,             /* 198 / 0xC8, PIN code is invalid. */ 
+    NFC_REASON_INVALID_KEYPATH,         /* 199 / 0xC9, Key path is invalid. */ 
+    NFC_REASON_INVALID_NOTE_TOO_LONG,   /* 200 / 0xCA, Note too long. */ 
+    NFC_REASON_LAST = 0xFF              /* 255 / 0xFF, Not used, only for completion. */ 
 } NFC_COMMAND_EXEC_FAILURE_REASON;
 
 /**

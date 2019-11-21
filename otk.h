@@ -80,22 +80,22 @@ void OTK_fpValidate(void);
  * i.e. 1,2,3,4,5
  * if a child index is 0, it means to get a random child index
  */
-void OTK_setKey(char *strIn);
+OTK_Error OTK_setKey(char *strIn);
 
 /* OTK_setPin
  * set the OTK PIN as user's input number
  */
-void OTK_setPin(char *strIn);
+OTK_Error OTK_setPin(char *strIn);
 
 /* OTK_pinValidate
- * start fps capture, set led cadence, set timer
+ * validate PIN code
  */
-void OTK_pinValidate(char *strIn);
+OTK_Error OTK_pinValidate(char *strIn);
 
 /* OTK_setNote
  * set Key Note with the customized input string
  */
-void OTK_setNote(char *strIn);
+OTK_Error OTK_setNote(char *strIn);
 
 /* OTK_battLevel
  * Return OTK battery level

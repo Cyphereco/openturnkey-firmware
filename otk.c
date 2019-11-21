@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <math.h>
 #include "app_scheduler.h"
 #include "app_timer.h"
 #include "boards.h"
@@ -355,7 +356,6 @@ void OTK_unlock()
 
     if (!OTK_isLocked()) {
         OTK_LOG_ERROR("OTK is unlocked already!");
-        //OTK_shutdown(OTK_ERROR_NFC_INVALID_REQUEST, false);
         return;
     }
 
@@ -373,7 +373,6 @@ void OTK_unlock()
         OTK_standby();
 #endif        
     }
-    //OTK_shutdown(OTK_ERROR_NO_ERROR, true);           
 }
 
 void OTK_fpValidate() 
@@ -401,7 +400,7 @@ void OTK_fpValidate()
     OTK_standby();
 }
 
-void OTK_setKey(char *strIn)
+OTK_Error OTK_setKey(char *strIn)
 {
     OTK_LOG_DEBUG("Executing OTK_setKey");
 
@@ -410,6 +409,18 @@ void OTK_setKey(char *strIn)
     char *str;
     char delim[] = ",";
     CRYPTO_derivativePath  newPath;
+
+    if (NULL == strIn) {
+        for (idx = 0; idx < CRYPTO_DERIVATIVE_DEPTH; idx++) {
+            newPath.derivativeIndex[idx] = CRYPTO_rng32();
+        }
+
+        KEY_setNewDerivativePath(&newPath);
+        KEY_recalcDerivative();
+        m_otk_isAuthorized = true;
+
+        return OTK_ERROR_NO_ERROR;
+    }
 
     if (OTK_isAuthorized()) {
         for (idx = 0; idx < CRYPTO_DERIVATIVE_DEPTH; idx++) {
@@ -421,19 +432,20 @@ void OTK_setKey(char *strIn)
             str = strtok(strIn, delim);
             while(str != NULL)
             {
+                uint32_t x = pow(10, strlen(str) - 1);
                 uint32_t ret = strtoul(str, &ptr, 10);
-                if (strlen(ptr) == 0) {
+                uint32_t chk = strtoul(str+1, NULL, 10);
+                if (strlen(ptr) == 0 && 
+                    (ret % x) == chk &&
+                    ret > 0 && ret < (0x80000000 - 1)) {
                     newPath.derivativeIndex[idx] = ret;
                 } 
+                else {
+                    return OTK_ERROR_INVALID_KEYPATH;
+                }
                 str = strtok(NULL, delim);
                 idx++;
             }      
-        }
-
-        for (idx = 0; idx < CRYPTO_DERIVATIVE_DEPTH; idx++) {
-            if (0 == newPath.derivativeIndex[idx]) {
-                newPath.derivativeIndex[idx] = CRYPTO_rng32();
-            }
         }
 
         KEY_setNewDerivativePath(&newPath);
@@ -441,34 +453,50 @@ void OTK_setKey(char *strIn)
 
         m_otk_isAuthorized = false;
         OTK_standby();
+
+        return OTK_ERROR_NO_ERROR;
     }
+
+    return OTK_ERROR_AUTH_FAILED;
 }
 
-void OTK_setPin(char *strIn)
+OTK_Error OTK_setPin(char *strIn)
 {
     OTK_LOG_DEBUG("Executing OTK_setPin");
     uint32_t ret;
+    uint32_t chk;
     char     *ptr;
 
     if (OTK_isAuthorized()) {
-        if (strlen(strIn) > 0) {
+        if (strlen(strIn) > 0 && strlen(strIn) <= 10) {
+            uint32_t x = pow(10, strlen(strIn) - 1);
             ret = strtoul(strIn, &ptr, 10);
-            if (strlen(ptr) == 0) {
+            chk = strtoul(strIn + 1, NULL, 10);
+            OTK_LOG_DEBUG("SET_PIN: %i / %i", (ret % x), chk);
+            if (strlen(ptr) == 0 && (ret % x) == chk) {
                 KEY_setPin(ret);
 
                 m_otk_isAuthorized = false;
                 OTK_standby();
-            }        
+                return OTK_ERROR_NO_ERROR;
+            }
         }
+        return OTK_ERROR_INVALID_PIN;
     }
+
+    return OTK_ERROR_AUTH_FAILED;
 }
 
-void OTK_pinValidate(char *strIn)
+OTK_Error OTK_pinValidate(char *strIn)
 {
     OTK_LOG_DEBUG("Executing OTK_pinValidate");
     uint32_t ret = 0;
     char     *ptrTail;
     char     *strPos = strstr(strIn, "pin=");
+
+    if (KEY_DEFAULT_PIN == KEY_getPin()) {
+        return OTK_ERROR_PIN_UNSET;
+    }
 
     if (strPos !=NULL) {
         strPos += strlen("pin=");
@@ -478,19 +506,28 @@ void OTK_pinValidate(char *strIn)
             if (KEY_getPin() == ret) {
                 m_otk_isAuthorized = true;
                 OTK_LOG_DEBUG("PIN Valid!");
-                return;
+                return OTK_ERROR_NO_ERROR;
             }
         }        
     }
 
     OTK_LOG_ERROR("PIN Invalid: %i", ret);   
     m_otk_isAuthorized = false;
+
+    return OTK_ERROR_PIN_NOT_MATCH;
 }
 
-void OTK_setNote(char *str)
+OTK_Error OTK_setNote(char *str)
 {
+    OTK_Return ret;
     OTK_LOG_DEBUG("Executing OTK_setNote");
-    KEY_setKeyNote(str);
+    ret = KEY_setKeyNote(str);
+
+    if (ret != OTK_RETURN_OK) {
+        return OTK_ERROR_NOTE_TOO_LONG;
+    }
+
+    return OTK_ERROR_NO_ERROR;
 }
 
 char* OTK_battLevel()

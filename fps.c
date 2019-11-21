@@ -476,7 +476,7 @@ void fps_longTouchDetector(
         }
 
         /* Touch holding time > 3000 ms, executing touch command */
-        if (!_longTouchCmdExecuting && _touchPeriod > APP_TIMER_TICKS(3000)) {
+        if (!_longTouchCmdExecuting && _touchPeriod > APP_TIMER_TICKS(2400)) {
             if (!OTK_isAuthorized()) {
                 _longTouchCmdExecuting = true;
                 OTK_pause();

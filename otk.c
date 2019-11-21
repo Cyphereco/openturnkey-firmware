@@ -441,11 +441,16 @@ OTK_Error OTK_setKey(char *strIn)
                     newPath.derivativeIndex[idx] = ret;
                 } 
                 else {
+                    m_otk_isAuthorized = false;
                     return OTK_ERROR_INVALID_KEYPATH;
                 }
                 str = strtok(NULL, delim);
                 idx++;
-            }      
+            }
+            if (idx < 5) {
+                m_otk_isAuthorized = false;
+                return OTK_ERROR_INVALID_KEYPATH;                
+            }
         }
 
         KEY_setNewDerivativePath(&newPath);
@@ -456,6 +461,8 @@ OTK_Error OTK_setKey(char *strIn)
 
         return OTK_ERROR_NO_ERROR;
     }
+
+    m_otk_isAuthorized = false;
 
     return OTK_ERROR_AUTH_FAILED;
 }
@@ -481,9 +488,11 @@ OTK_Error OTK_setPin(char *strIn)
                 return OTK_ERROR_NO_ERROR;
             }
         }
+        m_otk_isAuthorized = false;
         return OTK_ERROR_INVALID_PIN;
     }
 
+    m_otk_isAuthorized = false;
     return OTK_ERROR_AUTH_FAILED;
 }
 
@@ -524,9 +533,11 @@ OTK_Error OTK_setNote(char *str)
     ret = KEY_setKeyNote(str);
 
     if (ret != OTK_RETURN_OK) {
+        m_otk_isAuthorized = false;
         return OTK_ERROR_NOTE_TOO_LONG;
     }
 
+    m_otk_isAuthorized = false;
     return OTK_ERROR_NO_ERROR;
 }
 

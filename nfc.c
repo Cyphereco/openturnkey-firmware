@@ -281,7 +281,7 @@ static void nfc_callback(
                         case NFC_REQUEST_CMD_SHOW_KEY:
                         case NFC_REQUEST_CMD_SIGN:  
                         case NFC_REQUEST_CMD_CANCEL:
-                            /* Do nothing for thsese commands. */
+                                _execState = NFC_CMD_EXEC_SUCCESS;
                             break;
                         case NFC_REQUEST_CMD_INVALID:
                         case NFC_REQUEST_CMD_LAST:         

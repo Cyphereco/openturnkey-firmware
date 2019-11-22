@@ -240,12 +240,18 @@ static void nfc_callback(
 
                 OTK_Error err = OTK_ERROR_NO_ERROR;
 
-                if (!OTK_isAuthorized() && strstr(m_nfc_request_opt_buf, "pin=") != NULL) {
-                   /* Parse Option Params and check if PIN code is submitted and matched
-                    * Request Options are order irrelavant params separated by comma
-                    * as in the following foramt:
-                    * key=0,pin=99999999
-                    */
+                if (!OTK_isAuthorized() && 
+                    strstr(m_nfc_request_opt_buf, "pin=") != NULL &&
+                    m_nfc_request_command != NFC_REQUEST_CMD_EXPORT_WIF_KEY) {
+                    /*
+                     * For security concerns, export WIF private key must be authorized by 
+                     * Fingerprint, so it will not accept PIN code authoriztion. 
+                     */
+                    /* Parse Option Params and check if PIN code is submitted and matched
+                     * Request Options are order irrelavant params separated by comma
+                     * as in the following foramt:
+                     * key=0,pin=99999999
+                     */
                     err = OTK_pinValidate(m_nfc_request_opt_buf);  
                     OTK_LOG_DEBUG("PIN validation (%d), Error: (%d)", OTK_isAuthorized(), err);
                 }
@@ -281,6 +287,7 @@ static void nfc_callback(
                         case NFC_REQUEST_CMD_SHOW_KEY:
                         case NFC_REQUEST_CMD_SIGN:  
                         case NFC_REQUEST_CMD_CANCEL:
+                        case NFC_REQUEST_CMD_EXPORT_WIF_KEY:
                                 _execState = NFC_CMD_EXEC_SUCCESS;
                             break;
                         case NFC_REQUEST_CMD_INVALID:
@@ -547,7 +554,7 @@ static OTK_Return nfc_setRecords()
     sprintf(_mintInfo, "%s (DEBUG ONLY)", OTK_MINT_INFO);
 #endif    
     sprintf(_mintInfo, "%s\r\nBattery Level: %s / %d mV", _mintInfo, OTK_battLevel(), OTK_battVoltage());
-    sprintf(_mintInfo, "%s\r\nNote: \r\n%s", _mintInfo, KEY_getKeyNote());
+    sprintf(_mintInfo, "%s\r\nNote: \r\n%s", _mintInfo, KEY_getNote());
 
     NFC_NDEF_TEXT_RECORD_DESC_DEF(nfc_record_mint_info, UTF_8, en_code, sizeof(en_code),
             (const uint8_t *)_mintInfo, strlen(_mintInfo));
@@ -579,6 +586,8 @@ static OTK_Return nfc_setRecords()
             (const uint8_t *)_pubKey, strlen(_pubKey));
     errCode = nfc_ndef_msg_record_add(_ndef_msg_desc_ptr, &NFC_NDEF_TEXT_RECORD_DESC(nfc_record_public_key));
     OTK_LOG_RAW_INFO(OTK_LABEL_PUBLIC_KEY "\r\n%s\r\n\r\n", _pubKey);
+    //OTK_LOG_RAW_INFO("Master Private Key: \r\n%s\r\n\r\n", KEY_getWIFPrivateKey(KEY_MASTER));
+    //OTK_LOG_RAW_INFO("Derivative Private Key: \r\n%s\r\n\r\n", KEY_getWIFPrivateKey(KEY_DERIVATIVE));
 
     /* 5. Session Data */
     int _sessDataLen = 0;
@@ -590,7 +599,8 @@ static OTK_Return nfc_setRecords()
 
     if (m_nfc_cmd_exec_state == NFC_CMD_EXEC_SUCCESS &&
         (m_nfc_request_command == NFC_REQUEST_CMD_SHOW_KEY ||
-        m_nfc_request_command == NFC_REQUEST_CMD_SIGN)) {
+        m_nfc_request_command == NFC_REQUEST_CMD_SIGN ||
+        m_nfc_request_command == NFC_REQUEST_CMD_EXPORT_WIF_KEY)) {
         _sessDataLen = sprintf(_sessData, "%s<%s>\r\n%lu\r\n", _sessData, OTK_LABEL_REQUEST_ID, m_nfc_request_id);
 
         /* Below are protected data which require OTK user's authorization to be accessed. */
@@ -668,6 +678,15 @@ static OTK_Return nfc_setRecords()
             LED_setCadenceType(LED_CAD_RESULT_READY);
             LED_cadence_start();
             m_nfc_output_protect_data = true;
+        }
+        else if (NFC_REQUEST_CMD_EXPORT_WIF_KEY == m_nfc_request_command) {
+            _sessDataLen = sprintf(_sessData, "%s<%s>\r\n%s\r\n", _sessData, OTK_LABEL_WIF_KEY, KEY_getWIFPrivateKey(KEY_DERIVATIVE));
+
+            /* Stop OTK tasks and indicate protected data available. */
+            OTK_pause();
+            LED_setCadenceType(LED_CAD_RESULT_READY);
+            LED_cadence_start();
+            m_nfc_output_protect_data = true;            
         }
     }
 

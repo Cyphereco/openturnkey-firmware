@@ -88,6 +88,7 @@ typedef enum {
     NFC_REQUEST_CMD_SET_NOTE,           /* 166 / 0xA6, Set customized user note. */ 
     NFC_REQUEST_CMD_CANCEL,             /* 167 / 0xA7, Cancel previous command request. */
     NFC_REQUEST_CMD_RESET,              /* 168 / 0xA8, Clear FP and PIN and pick a new random derivative child key. */
+    NFC_REQUEST_CMD_EXPORT_WIF_KEY,     /* 169 / 0xA9, Export WIF private key. */
     NFC_REQUEST_CMD_LAST                /*  -- /, Not used, only for completion. */ 
 } NFC_REQUEST_COMMAND;
 

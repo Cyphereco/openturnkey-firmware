@@ -37,6 +37,7 @@
 #define CRYPTO_BITCOIN_ADDR_SZ          (35)    /* Compressed. */
 #define CRYPTO_HEX_PUBLIC_KEY_SZ        (CRYPTO_PUBLIC_KEY_SZ * 2 + 1)
 #define CRYPTO_EXT_PUBLIC_KEY_MAX_SZ    (160)   /* Maximum space reserved for extended public key string */
+#define CRYPTO_WIF_PRIVATE_KEY_SZ       (80)
 #define CRYPTO_DERIVATIVE_DEPTH         (5)
 #define CRYPTO_DERIVATIVE_PATH_STR_SZ   (CRYPTO_DERIVATIVE_DEPTH * 11)
 
@@ -85,6 +86,11 @@ typedef struct {
     char  str_ptr[CRYPTO_HEX_PUBLIC_KEY_SZ];
 } CRYPTO_hexPublicKey;
 
+/* Hex private key string struct. */
+typedef struct {
+    char  str_ptr[CRYPTO_WIF_PRIVATE_KEY_SZ];
+} CRYPTO_WIFPrivateKey;
+
 /* Bitcoin (BTC) address string struct. */
 typedef struct {
     char  str_ptr[CRYPTO_BITCOIN_ADDR_SZ];
@@ -100,6 +106,7 @@ typedef struct {
     CRYPTO_publicKey     publicKey;
     CRYPTO_extPublicKey  extPublickey;
     CRYPTO_hexPublicKey  hexPublickey; 
+    CRYPTO_WIFPrivateKey WIFPrivatekey; 
     CRYPTO_btcAddr       btcAddr; 
 } CRYPTO_HDNode;
 

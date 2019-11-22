@@ -75,6 +75,9 @@ static OTK_Return crypto_childKeyDerivation(
 static void crypto_serializedExtPublicKey(
     CRYPTO_HDNode *hdNode_ptr);
 
+static void crypto_serializedWIFPrivateKey(
+    CRYPTO_HDNode *hdNode_ptr);
+
 static int crypto_calcBtcAddr(
     CRYPTO_HDNode *hdNode_ptr);
 /* === End of local functions declaration === */
@@ -283,6 +286,26 @@ void crypto_serializedExtPublicKey(
     }
    
     base58_encode_check(nodeData, 78, dest_ptr, destLen);
+}
+
+/*
+ * ======== crypto_serializedWIFPrivateKey() ========
+ * Serialize HD node's private key to WIF formate string.
+ *
+ */
+void crypto_serializedWIFPrivateKey(
+    CRYPTO_HDNode *hdNode_ptr)
+{
+    memset(hdNode_ptr->WIFPrivatekey.str_ptr, 0, CRYPTO_WIF_PRIVATE_KEY_SZ);
+
+    char    *dest_ptr = hdNode_ptr->WIFPrivatekey.str_ptr;
+    uint8_t extKey[CRYPTO_PRIVATE_KEY_SZ + 2];
+
+    extKey[0] = 0x80;
+    memcpy(extKey + 1, hdNode_ptr->privateKey.octets, CRYPTO_PRIVATE_KEY_SZ);
+    extKey[CRYPTO_PRIVATE_KEY_SZ + 1] = 0x01;
+ 
+    base58_encode_check(extKey, CRYPTO_PRIVATE_KEY_SZ + 2, dest_ptr, CRYPTO_WIF_PRIVATE_KEY_SZ);
 }
 
 /*
@@ -516,6 +539,7 @@ OTK_Return CRYPTO_deriveHdNode(
 
     utils_bin_to_hex(derivehdNode_ptr->publicKey.octets, CRYPTO_PUBLIC_KEY_SZ, derivehdNode_ptr->hexPublickey.str_ptr);
     crypto_serializedExtPublicKey(derivehdNode_ptr);
+    crypto_serializedWIFPrivateKey(derivehdNode_ptr);
     crypto_calcBtcAddr(derivehdNode_ptr);
 
 #if CRYPTO_DEBUG_INFO

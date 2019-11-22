@@ -113,6 +113,15 @@ char *KEY_getHexPublicKey(
     bool getMaster);
 
 /**
+ * @brief Get Private Key in WIF string
+ * @param[in]   getMaster       Option, 1 - ger master's, 0 - get derivative's
+ *
+ * @return      char*           String of public key of master or derivative key
+ */
+char *KEY_getWIFPrivateKey(
+    bool getMaster);
+
+/**
  * @brief Get Full Extended Key String 
  * @param[in]   getMaster       Option, 1 - ger master's, 0 - get derivative's
  *
@@ -180,7 +189,7 @@ OTK_Return KEY_sign(
  *
  * @return      char*          Pointer of key note
  */
-char *KEY_getKeyNote(void);
+char *KEY_getNote(void);
 
 /**
  * @brief Set customized user note for Key
@@ -188,7 +197,7 @@ char *KEY_getKeyNote(void);
  *
  * @return      OTK_Return      OTK_RETURN_OK if no error, OTK_RETURN _FAIL otherwise.
  */
-OTK_Return KEY_setKeyNote(
+OTK_Return KEY_setNote(
     char *note);
 
 #endif

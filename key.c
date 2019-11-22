@@ -166,6 +166,11 @@ char *KEY_getHexPublicKey(bool getMaster)
     return (getMaster ? _keyObj.master.hexPublickey.str_ptr : _keyObj.derivative.hexPublickey.str_ptr);
 }
 
+char *KEY_getWIFPrivateKey(bool getMaster) 
+{
+    return (getMaster ? _keyObj.master.WIFPrivatekey.str_ptr : _keyObj.derivative.WIFPrivatekey.str_ptr);
+}
+
 char *KEY_getExtPublicKey(bool getMaster) 
 {
     return (getMaster ? _keyObj.master.extPublickey.str_ptr : _keyObj.derivative.extPublickey.str_ptr);
@@ -316,12 +321,12 @@ OTK_Return KEY_sign(
     return (OTK_RETURN_OK);
 }
 
-char *KEY_getKeyNote() 
+char *KEY_getNote() 
 {
     return _keyObj.keyNote;
 }
 
-OTK_Return KEY_setKeyNote(char *note)
+OTK_Return KEY_setNote(char *note)
 {
     if (note != NULL && strlen(note) <= KEY_NOTE_LENGTH) {
         memcpy(_keyObj.keyNote, note, strlen(note) + 1);

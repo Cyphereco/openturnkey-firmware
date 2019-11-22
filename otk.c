@@ -364,7 +364,7 @@ void OTK_unlock()
         OTK_Return ret = FPS_eraseAll();
         if (OTK_RETURN_OK == ret) {
             ret = KEY_setPin(KEY_DEFAULT_PIN);
-            ret &= KEY_setKeyNote(empty_str);
+            ret &= KEY_setNote(empty_str);
         }
         otk_fps_exec_result_led_update(ret);
 
@@ -530,7 +530,7 @@ OTK_Error OTK_setNote(char *str)
 {
     OTK_Return ret;
     OTK_LOG_DEBUG("Executing OTK_setNote");
-    ret = KEY_setKeyNote(str);
+    ret = KEY_setNote(str);
 
     if (ret != OTK_RETURN_OK) {
         m_otk_isAuthorized = false;

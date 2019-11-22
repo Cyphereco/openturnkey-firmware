@@ -88,9 +88,11 @@
 #define OTK_LABEL_MASTER_EXT_KEY    "Master_Extended_Key"
 #define OTK_LABEL_DERIVATIVE_EXT_KEY "Derivative_Exteded_Key"
 #define OTK_LABEL_DERIVATIVE_PATH   "Derivative_Path"
+#define OTK_LABEL_WIF_KEY           "WIF_Key"
 #define OTK_LABEL_SECURE_PIN   		"Secure_Pin"
 #define OTK_LABEL_REQUEST_SIG       "Request_Signature"
 #define OTK_LABEL_SESSION_SIG       "Session_Signature"
+
 
 /* Return value enumeration. */
 typedef enum {

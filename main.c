@@ -115,11 +115,19 @@ int main(void)
     int _pwrLvl = OTK_battVoltage();
 
     if (_pwrLvl < 3550) {
-        LED_blink(_led, 3);
+        int i;
+        for (i = 0; i < 3; i++) {
+            LED_on(_led);
+            nrf_delay_ms(200);
+            LED_all_off();
+            if (i < 2) {
+                nrf_delay_ms(200);            
+            }
+        }
     }
     else {
         LED_on(_led);
-        nrf_delay_ms(500);
+        nrf_delay_ms(1000);
         LED_all_off();
     }
 

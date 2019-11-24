@@ -42,9 +42,9 @@ APP_TIMER_DEF(_ledUpdateTimerId);
 
 static LED_Cadence _stateCad[LED_CAD_LAST] = {
     /* The first two cadences all set to 0 to avoid led mix when cadence changed */
-    [LED_CAD_IDLE_UNLOCKED].cad =  {K, K, K, B, B, K, K, K, B, B, K, K, K, B, B, K, K, K, B, B}, /* Short blink blue*/
-    [LED_CAD_IDLE_LOCKED].cad   =  {K, K, K, K, K, K, K, K, B, B, K, K, K, K, K, K, K, K, B, B}, /* Long blink blue*/
-    [LED_CAD_NFC_POLLING].cad   =  {K, K, M, K, M, K, M, K, M, K, M, K, M, K, M, K, M, K, M, K}, /* Fast blinking pink. */
+    [LED_CAD_IDLE_UNUSED].cad   =  {K, K, K, B, B, K, K, K, B, B, K, K, K, B, B, K, K, K, B, B}, /* Short blink blue*/
+    [LED_CAD_IDLE_STANDBY].cad  =  {K, K, K, K, K, K, K, K, B, B, K, K, K, K, K, K, K, K, B, B}, /* Long blink blue*/
+    [LED_CAD_NFC_POLLING].cad   =  {K, K, K, M, M, K, K, K, M, M, K, K, K, M, M, K, K, K, M, M}, /* Fast blinking pink. */
     [LED_CAD_FPS_CAPTURING].cad =  {K, K, G, G, R, R, G, G, R, R, G, G, R, R, G, G, R, R, G, G}, /* Red/green inter-blinking. */
     //[LED_CAD_PRE_AUTHORIZED].cad = {K, K, Y, K, Y, K, Y, K, Y, K, Y, K, Y, K, Y, K, Y, K, Y, K}, /* Fast blinking yellow (R+G). */
     [LED_CAD_PRE_AUTHORIZED].cad = {K, K, G, K, G, K, G, K, G, K, G, K, G, K, G, K, G, K, G, K}, /* Fast blinking yellow (R+G). */
@@ -54,7 +54,7 @@ static LED_Cadence _stateCad[LED_CAD_LAST] = {
 
 static bool _ledUpdateTimerRunning = false;
 static uint8_t _cadCounter = 0;
-static LED_CadenceType _cadType = LED_CAD_IDLE_UNLOCKED;
+static LED_CadenceType _cadType = LED_CAD_IDLE_UNUSED;
 
 /*
  * ======== _ledUpdate() ========

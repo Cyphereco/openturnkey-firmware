@@ -63,9 +63,6 @@ static uint16_t          m_batt_lvl_in_milli_volts; //!< Current battery level.
 static bool m_otk_isLocked = false;
 static bool m_otk_isAuthorized = false;
 
-#ifndef DISABLE_FPS
-static void otk_fps_exec_result_led_update(OTK_Return ret);
-#endif
 
 void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 {
@@ -225,25 +222,6 @@ bool OTK_isLocked() {
     return (m_otk_isLocked);
 }
 
-#ifndef DISABLE_FPS
-/*
- * ======== otk_fps_exec_result_led_update() ========
- * LED indication for command execution result
- */
-static void otk_fps_exec_result_led_update(OTK_Return ret) {
-    int _led = OTK_LED_GREEN;
-    if (OTK_RETURN_OK != ret) {
-        _led = OTK_LED_RED;
-    }
-
-    LED_all_off();
-    nrf_delay_ms(500);
-    LED_on(_led);
-    nrf_delay_ms(1000);
-    LED_all_off();
-} 
-#endif
-
 bool OTK_isAuthorized(void) {
     return (m_otk_isAuthorized);
 }
@@ -253,11 +231,8 @@ void OTK_standby()
     if (OTK_isAuthorized()) {
         LED_setCadenceType(LED_CAD_PRE_AUTHORIZED);
     }
-    else if (OTK_isLocked()) {
-        LED_setCadenceType(LED_CAD_IDLE_LOCKED);       
-    }
     else {
-        LED_setCadenceType(LED_CAD_IDLE_UNLOCKED);        
+        LED_setCadenceType(LED_CAD_IDLE_STANDBY);        
     }
 
     /* Start LED cadence */
@@ -342,9 +317,8 @@ void OTK_lock()
     }
     LED_setCadenceType(LED_CAD_FPS_CAPTURING);
     LED_cadence_start();
-#ifndef DISABLE_FPS    
-    otk_fps_exec_result_led_update(FPS_captureAndEnroll());
-#endif
+    FPS_captureAndEnroll();
+
     OTK_shutdown(OTK_ERROR_NO_ERROR, true);       
 }
 
@@ -366,7 +340,6 @@ void OTK_unlock()
             ret = KEY_setPin(KEY_DEFAULT_PIN);
             ret &= KEY_setNote(empty_str);
         }
-        otk_fps_exec_result_led_update(ret);
 
         m_otk_isLocked = (FPS_getUserNum() > 0) ? true : false;        
         m_otk_isAuthorized = false;

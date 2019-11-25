@@ -494,7 +494,7 @@ void fps_longTouchDetector(
                 break;
             }          
         }
-        else if (_touchPeriod > APP_TIMER_TICKS(2400)) {
+        else if (!_confirm_reset && _touchPeriod > APP_TIMER_TICKS(2400)) {
             if (OTK_isLocked()) {
                 if (!OTK_isAuthorized()) {
                     OTK_fpValidate();

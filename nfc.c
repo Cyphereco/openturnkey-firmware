@@ -280,8 +280,7 @@ static void nfc_callback(
                             err = OTK_setNote(m_nfc_request_data_buf);
                             break;
                         case NFC_REQUEST_CMD_RESET:
-                            err = OTK_setKey(NULL);
-                            deferredFunc = OTK_unlock;
+                            deferredFunc = OTK_reset;
                             break;
                         case NFC_REQUEST_CMD_LOCK:
                         case NFC_REQUEST_CMD_SHOW_KEY:

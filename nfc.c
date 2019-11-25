@@ -299,7 +299,13 @@ static void nfc_callback(
 
                     /* Schedule command execution and clear request command but keep the data. */
                     if (NULL != deferredFunc) {
-                        APP_ERROR_CHECK(app_sched_event_put(NULL, 0, nfc_execDeferredFunc));
+                        if (app_sched_queue_space_get() > 0) {
+                            APP_ERROR_CHECK(app_sched_event_put(NULL, 0, nfc_execDeferredFunc));
+                        }
+                        else {
+                            OTK_LOG_ERROR("Schedule NFC command failed, scheduler full!!");
+                            OTK_shutdown(OTK_ERROR_SCHED_ERROR,false);
+                        }
                     }            
 
                     if (err != OTK_ERROR_NO_ERROR) {

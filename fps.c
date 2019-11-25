@@ -24,6 +24,7 @@
 #include "uart.h"
 #include "fps.h"
 
+
 /* Right now only suppot XTB0811 FPS. */
 #define FPS_XTB0811
 
@@ -63,9 +64,9 @@ static void _checkSum(
 #endif
 
 static bool _touched  = false;
-static bool _longTouchDetectorEnabled = false;
-static bool _longTouchCmdExecuting   = false;
+static bool _killLTD = false;
 static uint32_t _touchPeriod = 0;
+static bool _confirm_reset = false;
 
 /* === Start of local function declarations === */
 void fps_longTouchDetector(
@@ -123,15 +124,21 @@ OTK_Return FPS_longTouchDetectorStart(void)
 {
     ret_code_t errCode;
 
-    if (!_longTouchDetectorEnabled) {
-        _longTouchDetectorEnabled = true;        
+    if (app_sched_queue_space_get() > 0) {
+        _killLTD = false;
         /* Initialize _touchStateHandler task */
         errCode = app_sched_event_put(NULL, 0, fps_longTouchDetector);
         APP_ERROR_CHECK(errCode);
         if (NRF_SUCCESS != errCode) {
-            OTK_LOG_ERROR("Start touch handler failed");
+            OTK_LOG_ERROR("Start long touch detector failed, scheduler error!!");
+            OTK_shutdown(OTK_ERROR_SCHED_ERROR, false);
             return (OTK_RETURN_FAIL);        
         }
+    }
+    else {
+        OTK_LOG_ERROR("Start touch handler failed, scheduler event buffer full!!");
+        OTK_shutdown(OTK_ERROR_SCHED_ERROR, false);
+        return (OTK_RETURN_FAIL);                
     }
 
     return (OTK_RETURN_OK);
@@ -143,7 +150,7 @@ OTK_Return FPS_longTouchDetectorStart(void)
  */
 void FPS_longTouchDetectorStop(void)
 {
-    _longTouchDetectorEnabled = false;
+    _killLTD = true;
 }
 
 /*
@@ -452,9 +459,9 @@ void fps_longTouchDetector(
     uint8_t _untouchCounter = 0;
     uint32_t _touchStartTime = 0; 
 
-    _longTouchCmdExecuting = false;                    
+    OTK_LOG_DEBUG("Starting Long-Touch-Detector!!");
 
-    while (_longTouchDetectorEnabled) {
+    while (!_killLTD) {
         _tpTouchState = FPS_isTouched();
 
         if (_tpTouchState == true) {
@@ -475,26 +482,34 @@ void fps_longTouchDetector(
             _touchPeriod = app_timer_cnt_get() - _touchStartTime;
         }
 
-        /* Touch holding time > 3000 ms, executing touch command */
-        if (!_longTouchCmdExecuting && _touchPeriod > APP_TIMER_TICKS(2400)) {
-            if (!OTK_isAuthorized()) {
-                _longTouchCmdExecuting = true;
-                OTK_pause();
-                if (OTK_isLocked()) {
+        if (_touchPeriod > APP_TIMER_TICKS(8000)) {
+            if (_confirm_reset) {
+                OTK_resetConfirmed();
+                _touched = false;
+                break;
+            }  
+            else if (OTK_isAuthorized()) {
+                OTK_unlock();
+                _touched = false;
+                break;
+            }          
+        }
+        else if (_touchPeriod > APP_TIMER_TICKS(2400)) {
+            if (OTK_isLocked()) {
+                if (!OTK_isAuthorized()) {
                     OTK_fpValidate();
-                }
-                else {
-                    OTK_lock();
+                    _touched = false;                  
+                    break;
                 }
             }
-            else if (_touchPeriod > APP_TIMER_TICKS(8000)) {
-                _longTouchCmdExecuting = true;
-                OTK_pause();
-                OTK_unlock();
+            else {
+                OTK_lock();
+                _touched = false;                
+                break;
             }
         }
 
-         if (_cacheTouchState != _touched) {
+        if (_cacheTouchState != _touched) {
             OTK_LOG_DEBUG("FPS State: %s, %d ms", (_tpTouchState == true ? "touched" : "untouched"), _touchPeriod / APP_TIMER_TICKS(1));
             _touched = _cacheTouchState;
 
@@ -504,12 +519,13 @@ void fps_longTouchDetector(
             else {
                 _touchStartTime = 0;
                 _touchPeriod = 0;
-                _longTouchCmdExecuting = false;
             }
         }            
 
         __WFE();
     }
+
+    OTK_LOG_DEBUG("End of Long-Touch-Detector!!");
 }
 
 
@@ -769,5 +785,9 @@ static OTK_Return fps_resp_processor(FPS_RespData *resp_ptr) {
 #else /* defined(FPS_XTB0811) */
     return (OTK_RETURN_FAIL);
 #endif /* defined(FPS_XTB0811) */
+}
+
+void FPS_confirmReset() {
+    _confirm_reset = true;
 }
 

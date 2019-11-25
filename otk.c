@@ -46,10 +46,6 @@
 #define ADC_RESULT_IN_MILLI_VOLTS(ADC_VALUE) \
     ((((ADC_VALUE) *ADC_REF_VOLTAGE_IN_MILLIVOLTS) / ADC_RES_10BIT) * ADC_PRE_SCALING_COMPENSATION)
 
-
-#define APP_SCHED_MAX_EVENT_SIZE 1                  /**< Maximum size of scheduler events. */
-#define APP_SCHED_QUEUE_SIZE     4                  /**< Maximum number of events in the scheduler queue. */
-
 #if defined NRF_LOG_MODULE_NAME
 #undef NRF_LOG_MODULE_NAME
 #endif  /* NRF_LOG_MODULE_NAME */
@@ -62,7 +58,6 @@ static uint16_t          m_batt_lvl_in_milli_volts; //!< Current battery level.
 
 static bool m_otk_isLocked = false;
 static bool m_otk_isAuthorized = false;
-
 
 void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 {
@@ -242,7 +237,8 @@ void OTK_standby()
     NFC_start();
 #ifndef DISABLE_FPS
     if (FPS_longTouchDetectorStart() != OTK_RETURN_OK) {
-        OTK_LOG_ERROR("FPS_longTouchDetectorStart failed!!");       
+        OTK_LOG_ERROR("FPS_longTouchDetectorStart failed!!");   
+        OTK_shutdown(OTK_ERROR_INIT_FPS, false);
     }        
 #endif
     OTK_extend();
@@ -259,6 +255,11 @@ void OTK_pause()
 void OTK_extend()
 {
     PWRMGMT_feed();    
+}
+
+void OTK_clearAuth() {
+    m_otk_isAuthorized = false;
+    OTK_standby();
 }
 
 void OTK_cease(OTK_Error err) {
@@ -311,15 +312,16 @@ void OTK_lock()
     OTK_LOG_DEBUG("Executing OTK_lock");
 
     if (OTK_isLocked()) {
-        OTK_LOG_ERROR("OTK is locked already!");
-        //OTK_shutdown(OTK_ERROR_NFC_INVALID_REQUEST, false);
+        OTK_LOG_DEBUG("OTK is locked already!");
         return;
     }
     LED_setCadenceType(LED_CAD_FPS_CAPTURING);
     LED_cadence_start();
     FPS_captureAndEnroll();
 
-    OTK_shutdown(OTK_ERROR_NO_ERROR, true);       
+    nrf_delay_ms(1000);
+
+    OTK_shutdown(OTK_ERROR_NO_ERROR, false);       
 }
 
 
@@ -329,7 +331,7 @@ void OTK_unlock()
     char *empty_str = "";
 
     if (!OTK_isLocked()) {
-        OTK_LOG_ERROR("OTK is unlocked already!");
+        OTK_LOG_DEBUG("OTK is unlocked already!");
         return;
     }
 
@@ -342,10 +344,44 @@ void OTK_unlock()
         }
 
         m_otk_isLocked = (FPS_getUserNum() > 0) ? true : false;        
-        m_otk_isAuthorized = false;
-        OTK_standby();
 #endif        
     }
+    OTK_clearAuth();
+}
+
+void OTK_reset() 
+{
+    OTK_LOG_DEBUG("Executing OTK_reset command");
+    OTK_LOG_DEBUG("User must press the FP sensor and hold 8 seconds to confirm the reset.");
+
+    NFC_stop(false);
+    LED_setCadenceType(LED_CAD_FPS_CAPTURING);
+    LED_cadence_start();
+    FPS_confirmReset();
+    OTK_standby();
+}
+
+void OTK_resetConfirmed() 
+{
+    OTK_LOG_DEBUG("OTK_reset command is confirmed.");
+    OTK_LOG_DEBUG("Fingerprints, Notes, PIN will be cleared and a new random derivative key will be chosen.");
+
+    m_otk_isAuthorized = true;
+    OTK_unlock();
+
+    int idx;
+    CRYPTO_derivativePath  newPath;
+
+    /* choose new random derivative key. */
+    for (idx = 0; idx < CRYPTO_DERIVATIVE_DEPTH; idx++) {
+        newPath.derivativeIndex[idx] = (CRYPTO_rng32() % 0x80000000);
+    }
+
+    KEY_setNewDerivativePath(&newPath);
+    KEY_recalcDerivative();
+
+    nrf_delay_ms(1000);
+    OTK_shutdown(OTK_ERROR_NO_ERROR, true);       
 }
 
 void OTK_fpValidate() 
@@ -369,7 +405,6 @@ void OTK_fpValidate()
         }
 #endif        
     }
-    NFC_stop(true);
     OTK_standby();
 }
 
@@ -383,23 +418,7 @@ OTK_Error OTK_setKey(char *strIn)
     char delim[] = ",";
     CRYPTO_derivativePath  newPath;
 
-    if (NULL == strIn) {
-        for (idx = 0; idx < CRYPTO_DERIVATIVE_DEPTH; idx++) {
-            newPath.derivativeIndex[idx] = CRYPTO_rng32();
-        }
-
-        KEY_setNewDerivativePath(&newPath);
-        KEY_recalcDerivative();
-        m_otk_isAuthorized = true;
-
-        return OTK_ERROR_NO_ERROR;
-    }
-
     if (OTK_isAuthorized()) {
-        for (idx = 0; idx < CRYPTO_DERIVATIVE_DEPTH; idx++) {
-            newPath.derivativeIndex[idx] = 0;
-        }
-
         if (strlen(strIn) > 0) {
             idx = 0;
             str = strtok(strIn, delim);
@@ -410,18 +429,18 @@ OTK_Error OTK_setKey(char *strIn)
                 uint32_t chk = strtoul(str+1, NULL, 10);
                 if (strlen(ptr) == 0 && 
                     (ret % x) == chk &&
-                    ret > 0 && ret < (0x80000000 - 1)) {
+                    ret >= 0 && ret < (0x80000000)) {
                     newPath.derivativeIndex[idx] = ret;
                 } 
                 else {
-                    m_otk_isAuthorized = false;
+                    OTK_clearAuth();
                     return OTK_ERROR_INVALID_KEYPATH;
                 }
                 str = strtok(NULL, delim);
                 idx++;
             }
             if (idx < 5) {
-                m_otk_isAuthorized = false;
+                OTK_clearAuth();
                 return OTK_ERROR_INVALID_KEYPATH;                
             }
         }
@@ -429,13 +448,12 @@ OTK_Error OTK_setKey(char *strIn)
         KEY_setNewDerivativePath(&newPath);
         KEY_recalcDerivative();
 
-        m_otk_isAuthorized = false;
-        OTK_standby();
+        OTK_clearAuth();
 
         return OTK_ERROR_NO_ERROR;
     }
 
-    m_otk_isAuthorized = false;
+    OTK_clearAuth();
 
     return OTK_ERROR_AUTH_FAILED;
 }
@@ -456,16 +474,15 @@ OTK_Error OTK_setPin(char *strIn)
             if (strlen(ptr) == 0 && (ret % x) == chk) {
                 KEY_setPin(ret);
 
-                m_otk_isAuthorized = false;
-                OTK_standby();
+                OTK_clearAuth();
                 return OTK_ERROR_NO_ERROR;
             }
         }
-        m_otk_isAuthorized = false;
+        OTK_clearAuth();
         return OTK_ERROR_INVALID_PIN;
     }
 
-    m_otk_isAuthorized = false;
+    OTK_clearAuth();
     return OTK_ERROR_AUTH_FAILED;
 }
 
@@ -494,7 +511,7 @@ OTK_Error OTK_pinValidate(char *strIn)
     }
 
     OTK_LOG_ERROR("PIN Invalid: %i", ret);   
-    m_otk_isAuthorized = false;
+    OTK_clearAuth();
 
     return OTK_ERROR_PIN_NOT_MATCH;
 }
@@ -506,11 +523,11 @@ OTK_Error OTK_setNote(char *str)
     ret = KEY_setNote(str);
 
     if (ret != OTK_RETURN_OK) {
-        m_otk_isAuthorized = false;
+        OTK_clearAuth();
         return OTK_ERROR_NOTE_TOO_LONG;
     }
 
-    m_otk_isAuthorized = false;
+    OTK_clearAuth();
     return OTK_ERROR_NO_ERROR;
 }
 

@@ -82,4 +82,6 @@ uint8_t     FPS_getUserNum(void);
 
 bool        FPS_isTouched(void);
 
+void        FPS_confirmReset(void);
+
 #endif

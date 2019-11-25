@@ -23,6 +23,10 @@
 #include "otk_common.h"
 #include "crypto.h"
 
+#define APP_SCHED_MAX_EVENT_SIZE 4                  /**< Maximum size of scheduler events. */
+#define APP_SCHED_QUEUE_SIZE     4                  /**< Maximum number of events in the scheduler queue. */
+
+
 bool OTK_isLocked(void);
 
 bool OTK_isAuthorized(void);
@@ -47,6 +51,11 @@ void OTK_pause(void);
  */
 void OTK_extend(void);
 
+/* OTK_pause
+ * disable NFC, stop touch detection, turn off led
+ */
+void OTK_clearAuth(void);
+
 /* OTK_cease
  * prepare for OTK shutdown
  */
@@ -65,10 +74,20 @@ void OTK_shutdown(
  */
 void OTK_lock(void);
 
-/* OTK_lock
+/* OTK_unlock
  * remove fingerprint, reset OTK PIN, erase Key Note
  */
 void OTK_unlock(void);
+
+/* OTK_reset
+ * procede OTK_reset command and waiting for user's confirmation on FP sensor.
+ */
+void OTK_reset(void);
+
+/* OTK_resetConfirmed
+ * remove fingerprint, reset OTK PIN, erase Key Note, choose a new random derivative key.
+ */
+void OTK_resetConfirmed(void);
 
 /* OTK_authorization
  * start fingerprint authorization

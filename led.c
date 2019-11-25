@@ -46,9 +46,8 @@ static LED_Cadence _stateCad[LED_CAD_LAST] = {
     [LED_CAD_IDLE_STANDBY].cad  =  {K, K, K, K, K, K, K, K, B, B, K, K, K, K, K, K, K, K, B, B}, /* Long blink blue*/
     [LED_CAD_NFC_POLLING].cad   =  {K, K, K, M, M, K, K, K, M, M, K, K, K, M, M, K, K, K, M, M}, /* Fast blinking pink. */
     [LED_CAD_FPS_CAPTURING].cad =  {K, K, G, G, R, R, G, G, R, R, G, G, R, R, G, G, R, R, G, G}, /* Red/green inter-blinking. */
-    //[LED_CAD_PRE_AUTHORIZED].cad = {K, K, Y, K, Y, K, Y, K, Y, K, Y, K, Y, K, Y, K, Y, K, Y, K}, /* Fast blinking yellow (R+G). */
-    [LED_CAD_PRE_AUTHORIZED].cad = {K, K, G, K, G, K, G, K, G, K, G, K, G, K, G, K, G, K, G, K}, /* Fast blinking yellow (R+G). */
-    [LED_CAD_RESULT_READY].cad  =  {K, K, G, K, G, K, G, K, G, K, G, K, G, K, G, K, G, K, G, K}, /* Fast blinking green. */
+    [LED_CAD_PRE_AUTHORIZED].cad = {G, G, G, K, G, G, G, K, G, G, G, K, G, G, G, K, G, G, G, K}, /* Fast blinking yellow (R+G). */
+    [LED_CAD_RESULT_READY].cad  =  {K, K, K, G, G, K, K, K, G, G, K, K, K, G, G, K, K, K, G, G}, /* Fast blinking green. */
     [LED_CAD_ERROR].cad         =  {K, K, R, K, R, K, R, K, R, K, R, K, R, K, R, K, R, K, R, K}, /* Fast blinking red. */
 };
 

@@ -309,6 +309,7 @@ void OTK_shutdown(
 
 void OTK_lock()
 {
+    OTK_Return ret;
     OTK_LOG_DEBUG("Executing OTK_lock");
 
     if (OTK_isLocked()) {
@@ -317,8 +318,16 @@ void OTK_lock()
     }
     LED_setCadenceType(LED_CAD_FPS_CAPTURING);
     LED_cadence_start();
-    FPS_captureAndEnroll();
+    ret = FPS_captureAndEnroll();
+    LED_all_off();
+    nrf_delay_ms(1000);
 
+    if (OTK_RETURN_OK == ret) {
+        LED_on(OTK_LED_GREEN);
+    }
+    else {
+        LED_on(OTK_LED_RED);
+    }
     nrf_delay_ms(1000);
 
     OTK_shutdown(OTK_ERROR_NO_ERROR, false);       

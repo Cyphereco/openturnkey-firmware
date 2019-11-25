@@ -259,7 +259,6 @@ void OTK_extend()
 
 void OTK_clearAuth() {
     m_otk_isAuthorized = false;
-    OTK_standby();
 }
 
 void OTK_cease(OTK_Error err) {
@@ -329,6 +328,7 @@ void OTK_lock()
         LED_on(OTK_LED_RED);
     }
     nrf_delay_ms(1000);
+    FPS_resetSensor();
 
     OTK_shutdown(OTK_ERROR_NO_ERROR, false);       
 }
@@ -345,6 +345,7 @@ void OTK_unlock()
     }
 
     if (OTK_isAuthorized()) {
+        OTK_pause();
 #ifndef DISABLE_FPS        
         OTK_Return ret = FPS_eraseAll();
         if (OTK_RETURN_OK == ret) {
@@ -356,6 +357,7 @@ void OTK_unlock()
 #endif        
     }
     OTK_clearAuth();
+    OTK_standby();
 }
 
 void OTK_reset() 
@@ -389,7 +391,8 @@ void OTK_resetConfirmed()
     KEY_recalcDerivative();
 
     nrf_delay_ms(1000);
-    OTK_shutdown(OTK_ERROR_NO_ERROR, true);       
+    FPS_resetSensor();
+    OTK_shutdown(OTK_ERROR_NO_ERROR, false);       
 }
 
 void OTK_fpValidate() 
@@ -398,7 +401,6 @@ void OTK_fpValidate()
     if (!OTK_isAuthorized()) {
         if (!OTK_isLocked()) {
             OTK_LOG_ERROR("OTK_fpValidate requires OTK_lock first!");
-            OTK_shutdown(OTK_ERROR_NFC_INVALID_REQUEST, false);
             return;
         }
         LED_setCadenceType(LED_CAD_FPS_CAPTURING);
@@ -406,6 +408,7 @@ void OTK_fpValidate()
 #ifndef DISABLE_FPS        
         if (FPS_captureAndMatch(1) > 0) {
             m_otk_isAuthorized = true;
+            NFC_stop(true);
         }
         else {
             /* Match FP failed, shutdown to protect OTK. */
@@ -501,6 +504,8 @@ OTK_Error OTK_pinValidate(char *strIn)
     char     *ptrTail;
     char     *strPos = strstr(strIn, "pin=");
 
+    OTK_pause();
+
     if (KEY_DEFAULT_PIN == KEY_getPin()) {
         return OTK_ERROR_PIN_UNSET;
     }
@@ -528,6 +533,8 @@ OTK_Error OTK_setNote(char *str)
 {
     OTK_Return ret;
     OTK_LOG_DEBUG("Executing OTK_setNote");
+
+    OTK_pause();
     ret = KEY_setNote(str);
 
     if (ret != OTK_RETURN_OK) {

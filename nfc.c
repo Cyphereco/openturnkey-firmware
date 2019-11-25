@@ -377,7 +377,7 @@ static void nfc_callback(
 
             if (m_nfc_security_shutdown) {
                 OTK_LOG_ERROR("Invalid request or Authentication Failed, Shutting down OTK!");
-                OTK_shutdown(OTK_ERROR_AUTH_FAILED, false);                                        
+                OTK_shutdown(OTK_ERROR_NFC_INVALID_REQUEST, false);                                        
             }
             break;
 

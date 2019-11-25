@@ -116,13 +116,11 @@ int main(void)
 
     if (_pwrLvl < 3550) {
         int i;
-        for (i = 0; i < 3; i++) {
+        for (i = 0; i < 4; i++) {
             LED_on(_led);
             nrf_delay_ms(200);
             LED_all_off();
-            if (i < 2) {
-                nrf_delay_ms(200);            
-            }
+            nrf_delay_ms(50);
         }
     }
     else {

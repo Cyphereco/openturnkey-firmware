@@ -367,7 +367,6 @@ void OTK_reset()
     LED_setCadenceType(LED_CAD_FPS_CAPTURING);
     LED_cadence_start();
     FPS_confirmReset();
-    OTK_standby();
 }
 
 void OTK_resetConfirmed() 

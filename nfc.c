@@ -362,6 +362,12 @@ static void nfc_callback(
                     return;
                 }
                 NFC_stop(true);
+            }
+
+            if (m_nfc_request_command == NFC_REQUEST_CMD_INVALID ||
+                m_nfc_request_command == NFC_REQUEST_CMD_CANCEL) {
+                /* Restart OTK service */
+                OTK_pause();
                 OTK_standby();
             }
             break;

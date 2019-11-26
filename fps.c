@@ -64,9 +64,17 @@ static void _checkSum(
 #endif
 
 static bool _touched  = false;
+static bool _ltdRunning = false;
 static bool _killLTD = false;
 static uint32_t _touchPeriod = 0;
 static bool _confirm_reset = false;
+
+/**
+ * @brief Typedef for safely calling external function which
+ * has I/O access, i.e. UART, FPS, etc.
+ */
+typedef void (*ltdCommadFunc_t)(void );
+static ltdCommadFunc_t ltdCmdFunc = NULL;
 
 /* === Start of local function declarations === */
 void fps_longTouchDetector(
@@ -124,21 +132,24 @@ OTK_Return FPS_longTouchDetectorStart(void)
 {
     ret_code_t errCode;
 
-    if (app_sched_queue_space_get() > 0) {
-        _killLTD = false;
-        /* Initialize _touchStateHandler task */
-        errCode = app_sched_event_put(NULL, 0, fps_longTouchDetector);
-        APP_ERROR_CHECK(errCode);
-        if (NRF_SUCCESS != errCode) {
-            OTK_LOG_ERROR("Start long touch detector failed, scheduler error!!");
-            OTK_shutdown(OTK_ERROR_SCHED_ERROR, false);
-            return (OTK_RETURN_FAIL);        
+    if (!_ltdRunning) {
+        if (app_sched_queue_space_get() > 0) {
+            _killLTD = false;
+            /* Initialize _touchStateHandler task */
+            errCode = app_sched_event_put(NULL, 0, fps_longTouchDetector);
+            APP_ERROR_CHECK(errCode);
+            if (NRF_SUCCESS != errCode) {
+                OTK_LOG_ERROR("Start long touch detector failed, scheduler error!!");
+                OTK_shutdown(OTK_ERROR_SCHED_ERROR, false);
+                return (OTK_RETURN_FAIL);        
+            }
+            _ltdRunning = true;
         }
-    }
-    else {
-        OTK_LOG_ERROR("Start touch handler failed, scheduler event buffer full!!");
-        OTK_shutdown(OTK_ERROR_SCHED_ERROR, false);
-        return (OTK_RETURN_FAIL);                
+        else {
+            OTK_LOG_ERROR("Start touch handler failed, scheduler event buffer full!!");
+            OTK_shutdown(OTK_ERROR_SCHED_ERROR, false);
+            return (OTK_RETURN_FAIL);                
+        }
     }
 
     return (OTK_RETURN_OK);
@@ -484,27 +495,23 @@ void fps_longTouchDetector(
 
         if (_touchPeriod > APP_TIMER_TICKS(8000)) {
             if (_confirm_reset) {
-                OTK_resetConfirmed();
-                _touched = false;
+                ltdCmdFunc = OTK_resetConfirmed;
                 break;
             }  
             else if (OTK_isAuthorized()) {
-                OTK_unlock();
-                _touched = false;
+                ltdCmdFunc = OTK_unlock;
                 break;
             }          
         }
         else if (!_confirm_reset && _touchPeriod > APP_TIMER_TICKS(2400)) {
             if (OTK_isLocked()) {
                 if (!OTK_isAuthorized()) {
-                    OTK_fpValidate();
-                    _touched = false;                  
+                    ltdCmdFunc = OTK_fpValidate;
                     break;
                 }
             }
             else {
-                OTK_lock();
-                _touched = false;                
+                ltdCmdFunc = OTK_lock;
                 break;
             }
         }
@@ -525,6 +532,12 @@ void fps_longTouchDetector(
         __WFE();
     }
 
+    if (ltdCmdFunc != NULL) {
+        ltdCmdFunc();
+    }
+
+    _ltdRunning = false;
+    OTK_LOG_DEBUG("FPS State: %s, %d ms", (_tpTouchState == true ? "touched" : "untouched"), _touchPeriod / APP_TIMER_TICKS(1));
     OTK_LOG_DEBUG("End of Long-Touch-Detector!!");
 }
 

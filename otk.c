@@ -355,7 +355,6 @@ void OTK_reset()
     OTK_LOG_DEBUG("Executing OTK_reset command");
     OTK_LOG_DEBUG("User must press the FP sensor and hold 8 seconds to confirm the reset.");
 
-    NFC_stop(false);
     LED_setCadenceType(LED_CAD_FPS_CAPTURING);
     LED_cadence_start();
     FPS_confirmReset();

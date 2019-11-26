@@ -24,6 +24,7 @@
 
 #include "otk.h"
 #include "led.h"
+#include "nfc.h"
 #include "key.h"
 #include "pwrmgmt.h"
 #include "unittest.h"
@@ -129,7 +130,7 @@ int main(void)
         LED_all_off();
     }
 
-
+    NFC_start();
     OTK_standby();
 
     while (1)

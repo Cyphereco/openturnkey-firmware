@@ -346,22 +346,24 @@ static void nfc_callback(
 
         /* External Reader polling ended. */
         case NFC_T4T_EVENT_FIELD_OFF:
-            /* Reading NFC data requires several polling detections before 
-             * reading data. Take necessary actions only after data is read,
-             * or received a request command, and ingore the rest.
-             */            
-            OTK_LOG_DEBUG("NFC reader polling ended!");
-            m_nfc_polling_started = false;
+            if (m_nfc_polling_started) {
+                /* Reading NFC data requires several polling detections before 
+                 * reading data. Take necessary actions only after data is read,
+                 * or received a request command, and ingore the rest.
+                 */            
+                OTK_LOG_DEBUG("NFC reader polling ended!");
+                m_nfc_polling_started = false;
 
-            if (m_nfc_read_finished) {
-                m_nfc_read_finished = false;
+                if (m_nfc_read_finished) {
+                    m_nfc_read_finished = false;
 
-                if (m_nfc_output_protect_data && !m_nfc_more_cmd) {
-                    OTK_LOG_DEBUG("Protected data is read, prepare shutdown.");
-                    OTK_shutdown(OTK_ERROR_NO_ERROR, false);
-                    return;
+                    if (m_nfc_output_protect_data && !m_nfc_more_cmd) {
+                        OTK_LOG_DEBUG("Protected data is read, prepare shutdown.");
+                        OTK_shutdown(OTK_ERROR_NO_ERROR, false);
+                        return;
+                    }
+                    NFC_stop(true);
                 }
-                NFC_stop(true);
                 OTK_standby();
             }
             break;

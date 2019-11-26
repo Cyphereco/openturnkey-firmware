@@ -42,17 +42,17 @@ OTK_Error OTK_init(void);
 void OTK_standby(void);
 
 /* OTK_pause
- * disable NFC, stop touch detection, turn off led
+ * stop touch detection, turn off led
  */
 void OTK_pause(void);
 
-/* OTK_pause
- * disable NFC, stop touch detection, turn off led
+/* OTK_extend
+ * extend OTK wake up time for another 15 seconds
  */
 void OTK_extend(void);
 
-/* OTK_pause
- * disable NFC, stop touch detection, turn off led
+/* OTK_clearAuth
+ * reset OTK authentication state
  */
 void OTK_clearAuth(void);
 

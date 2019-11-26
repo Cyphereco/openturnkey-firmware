@@ -233,8 +233,6 @@ void OTK_standby()
     /* Start LED cadence */
     LED_cadence_start();
 
-    /* Start sensing NFC field */
-    NFC_start();
 #ifndef DISABLE_FPS
     if (FPS_longTouchDetectorStart() != OTK_RETURN_OK) {
         OTK_LOG_ERROR("FPS_longTouchDetectorStart failed!!");   

@@ -252,6 +252,7 @@ OTK_Return FPS_captureAndEnroll(void)
 #if defined(FPS_XTB0811)
     int idx = 0;
     int fpId = 0;
+    int failure_count = 0;
 
     FPS_RespData resp = {0};
     XTB0811_CmdData cmd = _cmdData[FPS_CMD_TYPE_CAPTURE];
@@ -269,7 +270,8 @@ OTK_Return FPS_captureAndEnroll(void)
     LED_cadence_start();
 
     /* Exit loop when captured FP meet maximum limit or timeout */
-    while(idx < OTK_FINGER_PRINT_MAX_CAPTURE_NUM && (app_timer_cnt_get() - _startTime) < APP_TIMER_TICKS(10000)) {
+    while(idx < OTK_FINGER_PRINT_MAX_CAPTURE_NUM && failure_count < 3 &&
+        (app_timer_cnt_get() - _startTime) < APP_TIMER_TICKS(5000)) {
 
         /* Start capture only at FPS is touched */
         if (FPS_isTouched()) {
@@ -280,8 +282,13 @@ OTK_Return FPS_captureAndEnroll(void)
                 LED_on(OTK_LED_GREEN);
                 nrf_delay_ms(1000);
             }
+            else {
+                failure_count++;
+            }
             FPS_resetSensor();
             LED_all_off();
+            _startTime = app_timer_cnt_get();
+
             LED_setCadenceType(LED_CAD_FPS_CAPTURING);
             LED_cadence_start();
         }

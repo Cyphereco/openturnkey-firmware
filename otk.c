@@ -315,22 +315,14 @@ void OTK_lock()
         OTK_LOG_DEBUG("OTK is locked already!");
         return;
     }
-    LED_setCadenceType(LED_CAD_FPS_CAPTURING);
-    LED_cadence_start();
     ret = FPS_captureAndEnroll();
-    LED_all_off();
-    nrf_delay_ms(1000);
 
-    if (OTK_RETURN_OK == ret) {
-        LED_on(OTK_LED_GREEN);
+    if (ret == OTK_RETURN_OK) {
+        OTK_shutdown(OTK_ERROR_NO_ERROR, false);
     }
     else {
-        LED_on(OTK_LED_RED);
+        OTK_shutdown(OTK_ERROR_ENROLL_FP_FAILED, false); 
     }
-    nrf_delay_ms(1000);
-    FPS_resetSensor();
-
-    OTK_shutdown(OTK_ERROR_NO_ERROR, false);       
 }
 
 
@@ -390,6 +382,8 @@ void OTK_resetConfirmed()
     KEY_setNewDerivativePath(&newPath);
     KEY_recalcDerivative();
 
+    LED_all_off();
+    LED_on(OTK_LED_GREEN);
     nrf_delay_ms(1000);
     FPS_resetSensor();
     OTK_shutdown(OTK_ERROR_NO_ERROR, false);       
@@ -403,8 +397,7 @@ void OTK_fpValidate()
             OTK_LOG_ERROR("OTK_fpValidate requires OTK_lock first!");
             return;
         }
-        LED_setCadenceType(LED_CAD_FPS_CAPTURING);
-        LED_cadence_start();
+
 #ifndef DISABLE_FPS        
         if (FPS_captureAndMatch(1) > 0) {
             m_otk_isAuthorized = true;

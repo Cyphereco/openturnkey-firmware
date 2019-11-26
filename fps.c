@@ -20,6 +20,7 @@
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "nrf_log.h"
+#include "led.h"
 #include "otk.h"
 #include "uart.h"
 #include "fps.h"
@@ -263,20 +264,38 @@ OTK_Return FPS_captureAndEnroll(void)
 
     uint32_t _startTime = app_timer_cnt_get();
 
+    LED_all_off();
+    LED_setCadenceType(LED_CAD_FPS_CAPTURING);
+    LED_cadence_start();
+
     /* Exit loop when captured FP meet maximum limit or timeout */
     while(idx < OTK_FINGER_PRINT_MAX_CAPTURE_NUM && (app_timer_cnt_get() - _startTime) < APP_TIMER_TICKS(10000)) {
+
         /* Start capture only at FPS is touched */
         if (FPS_isTouched()) {
+            OTK_extend();
             if (OTK_RETURN_OK == fps_capture(idx)) {
                 idx++;
+                LED_all_off();
+                LED_on(OTK_LED_GREEN);
+                nrf_delay_ms(1000);
             }
             FPS_resetSensor();
+            LED_all_off();
+            LED_setCadenceType(LED_CAD_FPS_CAPTURING);
+            LED_cadence_start();
         }
         __WFE();
     }
-    
+
+    LED_all_off();
+
+
     if (idx < OTK_FINGER_PRINT_MIN_CAPTURE_NUM) {
         /* Failed to capture. */
+        LED_on(OTK_LED_RED);
+        nrf_delay_ms(1000);
+        FPS_resetSensor();
         return (OTK_RETURN_FAIL);
     }
 
@@ -308,6 +327,10 @@ OTK_Return FPS_captureAndEnroll(void)
         OTK_LOG_ERROR("FP enrollment failed!!");
         ret = OTK_RETURN_FAIL;
     }
+
+    LED_on(ret == OTK_RETURN_FAIL ? OTK_LED_RED : OTK_LED_GREEN);
+    nrf_delay_ms(1000);
+    FPS_resetSensor();
 
     return (ret);
 #else 
@@ -397,6 +420,10 @@ uint8_t FPS_captureAndMatch(uint8_t min_matches)
     uint8_t _match = 0;
     uint32_t _startTime = app_timer_cnt_get();
 
+    LED_all_off();
+    LED_setCadenceType(LED_CAD_FPS_CAPTURING);
+    LED_cadence_start();
+
     /* Exit loop when captured FP matched or timeout */
     while(_match < min_matches && (app_timer_cnt_get() - _startTime) < APP_TIMER_TICKS(10000)) {
         /* Start capture only at FPS is touched */
@@ -406,11 +433,19 @@ uint8_t FPS_captureAndMatch(uint8_t min_matches)
             }
             if (fpId > 0 ) {
                 _match++;
+                LED_all_off();
+                LED_on(OTK_LED_GREEN);
+                nrf_delay_ms(1000);
             }
             FPS_resetSensor();
+            LED_all_off();
+            LED_setCadenceType(LED_CAD_FPS_CAPTURING);
+            LED_cadence_start();
         }
         __WFE();
     }
+
+    LED_all_off();
 
     return (fpId);
 #else 
@@ -506,8 +541,7 @@ void fps_longTouchDetector(
         else if (!_confirm_reset && _touchPeriod > APP_TIMER_TICKS(2400)) {
             if (OTK_isLocked()) {
                 if (!OTK_isAuthorized()) {
-                    ltdCmdFunc = OTK_fpValidate;
-                    break;
+                    OTK_fpValidate();
                 }
             }
             else {

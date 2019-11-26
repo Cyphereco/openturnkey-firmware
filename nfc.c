@@ -75,8 +75,6 @@ static uint32_t m_nfc_request_id = 0;               /* UINT32 request ID submit 
 static char m_nfc_request_data_buf[NFC_REQUEST_DATA_BUF_SZ];  /* Buffer to store passed in request data. */
 static char m_nfc_request_opt_buf[NFC_REQUEST_OPT_BUF_SZ];    /* Buffer to store passed in request option. */
 
-static bool _otk_paused = false;
-
 /**
  * @brief Typedef for safely calling external function which
  * has I/O access, i.e. UART, FPS, etc.
@@ -204,7 +202,6 @@ static void nfc_callback(
 
                 m_nfc_polling_started = true;
                 OTK_pause();
-                _otk_paused = true;
                 LED_setCadenceType(LED_CAD_NFC_POLLING);        
                 LED_cadence_start();
                 OTK_extend();
@@ -237,10 +234,7 @@ static void nfc_callback(
                     m_nfc_cmd_failure_reason = NFC_REASON_INVALID;                    
                     nfc_clearRequest();
                     NFC_stop(true);
-                    if (_otk_paused) {
-                        OTK_standby();
-                        _otk_paused = false;
-                    }
+                    OTK_standby();
                     break;
                 }
 
@@ -346,10 +340,7 @@ static void nfc_callback(
                 }
 
                 NFC_stop(true);
-                if (_otk_paused) {
-                    OTK_standby();
-                    _otk_paused = false;                    
-                }
+                OTK_standby();
             }           
             break;
 
@@ -373,9 +364,11 @@ static void nfc_callback(
                 NFC_stop(true);
             }
 
-            if (_otk_paused) {
+            if (m_nfc_request_command == NFC_REQUEST_CMD_INVALID ||
+                m_nfc_request_command == NFC_REQUEST_CMD_CANCEL) {
+                /* Restart OTK service */
+                OTK_pause();
                 OTK_standby();
-                _otk_paused = false;
             }
             break;
 
@@ -681,7 +674,6 @@ static OTK_Return nfc_setRecords()
 
             /* Stop OTK tasks and indicate calculated data available. */
             OTK_pause();
-            _otk_paused = true;
             LED_setCadenceType(LED_CAD_RESULT_READY);
             LED_cadence_start();
 
@@ -694,7 +686,6 @@ static OTK_Return nfc_setRecords()
 
             /* Stop OTK tasks and indicate protected data available. */
             OTK_pause();
-            _otk_paused = true;
             LED_setCadenceType(LED_CAD_RESULT_READY);
             LED_cadence_start();
             m_nfc_output_protect_data = true;
@@ -704,7 +695,6 @@ static OTK_Return nfc_setRecords()
 
             /* Stop OTK tasks and indicate protected data available. */
             OTK_pause();
-            _otk_paused = true;
             LED_setCadenceType(LED_CAD_RESULT_READY);
             LED_cadence_start();
             m_nfc_output_protect_data = true;            

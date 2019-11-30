@@ -1,0 +1,1 @@
+nrfjprog.exe -f nrf52 --rbp ALL

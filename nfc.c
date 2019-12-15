@@ -82,6 +82,13 @@ static char m_nfc_request_opt_buf[NFC_REQUEST_OPT_BUF_SZ];    /* Buffer to store
 typedef void (*deferredFunc_t)(void );
 static deferredFunc_t deferredFunc = NULL;
 
+void _schedShutdown_aft_unlock() {
+    LED_all_off();
+    LED_on(OTK_LED_GREEN);
+    nrf_delay_ms(2400);
+    OTK_shutdown(OTK_ERROR_NO_ERROR, false);    
+}
+
 /**
  * @brief Clear stored request command and data
  *
@@ -554,9 +561,9 @@ static OTK_Return nfc_setRecords()
 
     /* 2. OTK mint information. */
     char _mintInfo[256];
-    char *ptr_mstPubKey = KEY_getHexPublicKey(true);
+    char *ptr_mstAddr = KEY_getBtcAddr(true);
     char _serial[11] = {0};
-    memcpy(_serial, ptr_mstPubKey + strlen(ptr_mstPubKey) - 10, 10);
+    memcpy(_serial, ptr_mstAddr + strlen(ptr_mstAddr) - 10, 10);
     sprintf(_mintInfo, "%s\r\nSerial No.: %s", OTK_MINT_INFO, _serial);
 #ifdef DEBUG    
     sprintf(_mintInfo, "%s (DEBUG ONLY)", OTK_MINT_INFO);
@@ -745,6 +752,18 @@ static OTK_Return nfc_setRecords()
     if (errCode != NRF_SUCCESS) {
         return (OTK_RETURN_FAIL);
     }
+
+    if (NFC_REQUEST_CMD_UNLOCK == m_nfc_request_command &&
+        NFC_CMD_EXEC_SUCCESS == m_nfc_cmd_exec_state) {
+        deferredFunc = _schedShutdown_aft_unlock;
+        if (app_sched_queue_space_get() > 0) {
+            APP_ERROR_CHECK(app_sched_event_put(NULL, 0, nfc_execDeferredFunc));
+        }
+        else {
+            OTK_LOG_ERROR("Schedule NFC command failed, scheduler full!!");
+            OTK_shutdown(OTK_ERROR_SCHED_ERROR,false);
+        }
+    }            
 
     nfc_clearRequest();
 

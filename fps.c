@@ -280,11 +280,26 @@ OTK_Return FPS_captureAndEnroll(void)
                 idx++;
                 LED_all_off();
                 LED_on(OTK_LED_GREEN);
-                nrf_delay_ms(1000);
             }
             else {
+                LED_all_off();
+                LED_on(OTK_LED_RED);
+                nrf_delay_ms(1000);
                 failure_count++;
             }
+
+            uint8_t _untouchCounter = 0;
+            while (_untouchCounter < FPS_TOUCH_DEBOUNCE) {
+                if (FPS_isTouched()) {
+                    _untouchCounter = 0;
+                }
+                else {
+                    _untouchCounter++;
+                }
+                FPS_resetSensor();
+                nrf_delay_ms(180);
+            }
+
             FPS_resetSensor();
             LED_all_off();
             _startTime = app_timer_cnt_get();
@@ -442,8 +457,24 @@ uint8_t FPS_captureAndMatch(uint8_t min_matches)
                 _match++;
                 LED_all_off();
                 LED_on(OTK_LED_GREEN);
-                nrf_delay_ms(1000);
             }
+            else {
+                LED_all_off();
+                LED_on(OTK_LED_RED);
+            }
+
+            uint8_t _untouchCounter = 0;
+            while (_untouchCounter < FPS_TOUCH_DEBOUNCE) {
+                if (FPS_isTouched()) {
+                    _untouchCounter = 0;
+                }
+                else {
+                    _untouchCounter++;
+                }
+                FPS_resetSensor();
+                nrf_delay_ms(180);
+            }
+
             FPS_resetSensor();
             LED_all_off();
             LED_setCadenceType(LED_CAD_FPS_CAPTURING);
@@ -535,26 +566,27 @@ void fps_longTouchDetector(
             _touchPeriod = app_timer_cnt_get() - _touchStartTime;
         }
 
-        if (_touchPeriod > APP_TIMER_TICKS(8000)) {
+        if (_touchPeriod > APP_TIMER_TICKS(10000)) {
             if (_confirm_reset) {
                 ltdCmdFunc = OTK_resetConfirmed;
-                break;
-            }  
+            }
             else if (OTK_isAuthorized()) {
                 ltdCmdFunc = OTK_unlock;
-                break;
-            }          
+            }
+            else {
+                OTK_shutdown(OTK_ERROR_NO_ERROR, false);
+            }
+            break;
         }
-        else if (!_confirm_reset && _touchPeriod > APP_TIMER_TICKS(2400)) {
+        else if (_touchPeriod > APP_TIMER_TICKS(2400) &&
+            !_confirm_reset && !OTK_isAuthorized()) {
             if (OTK_isLocked()) {
-                if (!OTK_isAuthorized()) {
-                    OTK_fpValidate();
-                }
+                ltdCmdFunc = OTK_fpValidate;
             }
             else {
                 ltdCmdFunc = OTK_lock;
-                break;
             }
+            break;
         }
 
         if (_cacheTouchState != _touched) {
@@ -573,11 +605,14 @@ void fps_longTouchDetector(
         __WFE();
     }
 
+    _touchStartTime = 0;
+    _touchPeriod = 0;
+    _ltdRunning = false;
+
     if (ltdCmdFunc != NULL) {
         ltdCmdFunc();
     }
 
-    _ltdRunning = false;
     OTK_LOG_DEBUG("FPS State: %s, %d ms", (_tpTouchState == true ? "touched" : "untouched"), _touchPeriod / APP_TIMER_TICKS(1));
     OTK_LOG_DEBUG("End of Long-Touch-Detector!!");
 }

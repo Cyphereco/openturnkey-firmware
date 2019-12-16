@@ -75,7 +75,6 @@ static bool _confirm_reset = false;
  * has I/O access, i.e. UART, FPS, etc.
  */
 typedef void (*ltdCommadFunc_t)(void );
-static ltdCommadFunc_t ltdCmdFunc = NULL;
 
 /* === Start of local function declarations === */
 void fps_longTouchDetector(
@@ -284,7 +283,6 @@ OTK_Return FPS_captureAndEnroll(void)
             else {
                 LED_all_off();
                 LED_on(OTK_LED_RED);
-                nrf_delay_ms(1000);
                 failure_count++;
             }
 
@@ -542,6 +540,7 @@ void fps_longTouchDetector(
     bool _cacheTouchState = false;
     uint8_t _untouchCounter = 0;
     uint32_t _touchStartTime = 0; 
+    ltdCommadFunc_t ltdCmdFunc = NULL;
 
     OTK_LOG_DEBUG("Starting Long-Touch-Detector!!");
 
@@ -605,16 +604,17 @@ void fps_longTouchDetector(
         __WFE();
     }
 
+    _touched = false;
     _touchStartTime = 0;
     _touchPeriod = 0;
     _ltdRunning = false;
 
+    OTK_LOG_DEBUG("FPS State: %s, %d ms", (_tpTouchState == true ? "touched" : "untouched"), _touchPeriod / APP_TIMER_TICKS(1));
+    OTK_LOG_DEBUG("End of Long-Touch-Detector!!");
+
     if (ltdCmdFunc != NULL) {
         ltdCmdFunc();
     }
-
-    OTK_LOG_DEBUG("FPS State: %s, %d ms", (_tpTouchState == true ? "touched" : "untouched"), _touchPeriod / APP_TIMER_TICKS(1));
-    OTK_LOG_DEBUG("End of Long-Touch-Detector!!");
 }
 
 

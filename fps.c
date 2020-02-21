@@ -274,7 +274,7 @@ OTK_Return FPS_captureAndEnroll(void)
 
         /* Start capture only at FPS is touched */
         if (FPS_isTouched()) {
-            OTK_extend();
+            OTK_LOG_DEBUG("FP touched +")
             if (OTK_RETURN_OK == fps_capture(idx)) {
                 idx++;
                 LED_all_off();
@@ -297,6 +297,7 @@ OTK_Return FPS_captureAndEnroll(void)
                 FPS_resetSensor();
                 nrf_delay_ms(180);
             }
+            OTK_LOG_DEBUG("FP released - ")
 
             FPS_resetSensor();
             LED_all_off();
@@ -448,6 +449,7 @@ uint8_t FPS_captureAndMatch(uint8_t min_matches)
     while(_match < min_matches && (app_timer_cnt_get() - _startTime) < APP_TIMER_TICKS(10000)) {
         /* Start capture only at FPS is touched */
         if (FPS_isTouched()) {
+            OTK_LOG_DEBUG("FP touched + ")
             if (OTK_RETURN_OK == fps_capture(0)) {
                 fpId = fps_match();
             }
@@ -472,6 +474,7 @@ uint8_t FPS_captureAndMatch(uint8_t min_matches)
                 FPS_resetSensor();
                 nrf_delay_ms(180);
             }
+            OTK_LOG_DEBUG("FP relased - ")
 
             FPS_resetSensor();
             LED_all_off();

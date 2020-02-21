@@ -97,6 +97,8 @@ static void nfc_clearRequest()
 {
     m_nfc_request_id = 0;
     m_nfc_request_command = NFC_REQUEST_CMD_INVALID;                   /* Vairable to store passing in reqeuset command. */
+    m_nfc_cmd_exec_state = NFC_CMD_EXEC_NA;
+    m_nfc_cmd_failure_reason = NFC_REASON_INVALID;
 
     memset(m_nfc_request_data_buf, 0, NFC_REQUEST_DATA_BUF_SZ);
     memset(m_nfc_request_opt_buf, 0, NFC_REQUEST_OPT_BUF_SZ);
@@ -228,9 +230,22 @@ static void nfc_callback(
                 if (m_nfc_read_finished) {
                     m_nfc_read_finished = false;
 
+                    if (NFC_REQUEST_CMD_UNLOCK == m_nfc_request_command) {
+                        OTK_LOG_DEBUG("OTK is unlocked, prepare shutdown.");
+                        OTK_shutdown(OTK_ERROR_NO_ERROR, false);
+                        return;
+                    }
+
                     if (m_nfc_output_protect_data && !m_nfc_more_cmd) {
                         OTK_LOG_DEBUG("Protected data is read, prepare shutdown.");
                         OTK_shutdown(OTK_ERROR_NO_ERROR, false);
+                        return;
+                    }
+
+                    if (m_nfc_cmd_exec_state > 0) {
+                        nfc_clearRequest();
+                        NFC_stop(true);
+                        OTK_standby();
                         return;
                     }
                 }
@@ -763,8 +778,6 @@ static OTK_Return nfc_setRecords()
             OTK_shutdown(OTK_ERROR_SCHED_ERROR,false);
         }
     }            
-
-    nfc_clearRequest();
 
     return (OTK_RETURN_OK);
 }

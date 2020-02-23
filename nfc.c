@@ -57,7 +57,8 @@ static const uint8_t en_code[] = {'e', 'n'};
 static bool m_nfc_started = false;                  /* (True), if NFC is running. */
 static bool m_nfc_restart_flag = false;             /* (True), whether to restart NFC. */
 static bool m_nfc_polling_started = false;          /* (True), NFC tag is polled */
-static bool m_nfc_read_finished = false;            /* (True), if NFC data has been read.*/
+static bool m_nfc_has_read = false;            /* (True), if NFC data has been read.*/
+static bool m_nfc_has_written = false;           /* (True), if NFC data has been written.*/
 static bool m_nfc_output_protect_data = false;      /* (True), if protected data has been read. */
 static bool m_nfc_more_cmd = false;                 /* (True), if there is more command to come.*/
 static bool m_nfc_security_shutdown = false;
@@ -83,6 +84,9 @@ typedef void (*deferredFunc_t)(void );
 static deferredFunc_t deferredFunc = NULL;
 
 void _schedShutdown_aft_unlock() {
+                        
+    OTK_LOG_DEBUG("OTK is unlocked, prepare shutdown.");
+
     LED_all_off();
     LED_on(OTK_LED_GREEN);
     nrf_delay_ms(2400);
@@ -219,6 +223,14 @@ static void nfc_callback(
 
         /* External Reader polling ended. */
         case NFC_T4T_EVENT_FIELD_OFF:
+            /*
+             * Shutdown OTK for security concerns, PIN error 3 times or invalid NFC request
+             */
+            if (m_nfc_security_shutdown) { 
+                OTK_LOG_ERROR("Invalid request or Authentication Failed, Shutting down OTK!");
+                OTK_shutdown(OTK_ERROR_NFC_INVALID_REQUEST, false);                                        
+            }
+
             if (m_nfc_polling_started) {
                 /* Reading NFC data requires several polling detections before 
                  * reading data. Take necessary actions only after data is read,
@@ -227,14 +239,21 @@ static void nfc_callback(
                 OTK_LOG_DEBUG("NFC reader polling ended!");
                 m_nfc_polling_started = false;
 
-                if (m_nfc_read_finished) {
-                    m_nfc_read_finished = false;
-
-                    if (NFC_REQUEST_CMD_UNLOCK == m_nfc_request_command) {
-                        OTK_LOG_DEBUG("OTK is unlocked, prepare shutdown.");
-                        OTK_shutdown(OTK_ERROR_NO_ERROR, false);
+                if (m_nfc_has_read) {
+                    if (NFC_REQUEST_CMD_UNLOCK == m_nfc_request_command &&
+                        m_nfc_cmd_exec_state == NFC_CMD_EXEC_SUCCESS &&
+                        !OTK_isLocked()) {
+                        deferredFunc = _schedShutdown_aft_unlock;
+                        if (app_sched_queue_space_get() > 0) {
+                            APP_ERROR_CHECK(app_sched_event_put(NULL, 0, nfc_execDeferredFunc));
+                        }
+                        else {
+                            OTK_LOG_ERROR("Schedule NFC command failed, scheduler full!!");
+                            OTK_shutdown(OTK_ERROR_SCHED_ERROR,false);
+                        }
+                        m_nfc_has_read = false;
                         return;
-                    }
+                    } 
 
                     if (m_nfc_output_protect_data && !m_nfc_more_cmd) {
                         OTK_LOG_DEBUG("Protected data is read, prepare shutdown.");
@@ -244,8 +263,10 @@ static void nfc_callback(
 
                     if (m_nfc_cmd_exec_state > 0) {
                         nfc_clearRequest();
+                        OTK_pause();
                         NFC_stop(true);
                         OTK_standby();
+                        m_nfc_has_read = false;
                         return;
                     }
                 }
@@ -264,7 +285,6 @@ static void nfc_callback(
                     OTK_LOG_DEBUG("NFC reader updated with request command (%d)", m_nfc_request_command);;
 
                     static NFC_COMMAND_EXEC_STATE _execState = NFC_CMD_EXEC_SUCCESS;
-                    m_nfc_read_finished = false;
 
                     OTK_LOG_DEBUG("Request Received:");
                     OTK_LOG_DEBUG("Request ID: (%lu)", m_nfc_request_id);
@@ -276,6 +296,7 @@ static void nfc_callback(
                         m_nfc_cmd_exec_state = NFC_CMD_EXEC_NA;
                         m_nfc_cmd_failure_reason = NFC_REASON_INVALID;                    
                         nfc_clearRequest();
+                        OTK_pause();
                         NFC_stop(true);
                         OTK_standby();
                         break;
@@ -382,9 +403,14 @@ static void nfc_callback(
                             m_nfc_security_shutdown = true;
                         }
                     }
+                }               
 
+                OTK_pause();
+                if (m_nfc_has_read || m_nfc_has_written) {
+                    m_nfc_has_read = false;
+                    m_nfc_has_written = false;
                     NFC_stop(true);
-                }                  
+                }
                 OTK_standby();
             }
             break;
@@ -393,15 +419,11 @@ static void nfc_callback(
         case NFC_T4T_EVENT_NDEF_READ:
             OTK_LOG_DEBUG("NFC reader read completed!");
             /* Occurs only once per NFC reading. */
-            m_nfc_read_finished = true;
+            m_nfc_has_read = true;
 
             if (m_nfc_request_command != NFC_REQUEST_CMD_INVALID && !m_nfc_output_protect_data) {
                 NFC_stop(true);
-            }
-
-            if (m_nfc_security_shutdown) { 
-                OTK_LOG_ERROR("Invalid request or Authentication Failed, Shutting down OTK!");
-                OTK_shutdown(OTK_ERROR_NFC_INVALID_REQUEST, false);                                        
+                OTK_standby();
             }
             break;
 
@@ -421,6 +443,8 @@ static void nfc_callback(
              * timeout on the client device resulted a "Written Error".
              *
              */
+            m_nfc_has_written = true;
+
             if (dataLength > 0 && dataLength < NFC_MAX_RECORD_SZ) {
                 _record_idx = 0;
                 OTK_LOG_DEBUG("NFC reader write data (%d) bytes.", dataLength);
@@ -524,6 +548,7 @@ static void nfc_callback(
                     if (_invalidRequest) {
                         OTK_LOG_ERROR("Invalid request, prepare OTK shutdown!");
                         m_nfc_security_shutdown = true;
+                        break;
                     }
                     ndef_record_ptr += _descLen;
                     dataLength -= _descLen;
@@ -767,17 +792,17 @@ static OTK_Return nfc_setRecords()
         return (OTK_RETURN_FAIL);
     }
 
-    if (NFC_REQUEST_CMD_UNLOCK == m_nfc_request_command &&
-        NFC_CMD_EXEC_SUCCESS == m_nfc_cmd_exec_state) {
-        deferredFunc = _schedShutdown_aft_unlock;
-        if (app_sched_queue_space_get() > 0) {
-            APP_ERROR_CHECK(app_sched_event_put(NULL, 0, nfc_execDeferredFunc));
-        }
-        else {
-            OTK_LOG_ERROR("Schedule NFC command failed, scheduler full!!");
-            OTK_shutdown(OTK_ERROR_SCHED_ERROR,false);
-        }
-    }            
+    // if (NFC_REQUEST_CMD_UNLOCK == m_nfc_request_command &&
+    //     NFC_CMD_EXEC_SUCCESS == m_nfc_cmd_exec_state) {
+    //     deferredFunc = _schedShutdown_aft_unlock;
+    //     if (app_sched_queue_space_get() > 0) {
+    //         APP_ERROR_CHECK(app_sched_event_put(NULL, 0, nfc_execDeferredFunc));
+    //     }
+    //     else {
+    //         OTK_LOG_ERROR("Schedule NFC command failed, scheduler full!!");
+    //         OTK_shutdown(OTK_ERROR_SCHED_ERROR,false);
+    //     }
+    // }            
 
     return (OTK_RETURN_OK);
 }

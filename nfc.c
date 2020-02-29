@@ -218,7 +218,16 @@ static void nfc_callback(
                 LED_setCadenceType(LED_CAD_NFC_POLLING);        
                 LED_cadence_start();
                 OTK_extend();
-            }         
+            }
+            else {
+                if (m_nfc_has_written) {
+                    if (m_nfc_security_shutdown) { 
+                        OTK_LOG_ERROR("Invalid request or Authentication Failed, Shutting down OTK!");
+                        OTK_shutdown(OTK_ERROR_NFC_INVALID_REQUEST, false);                                        
+                    }
+                    NFC_stop(true);
+                }
+            }
             break;
 
         /* External Reader polling ended. */

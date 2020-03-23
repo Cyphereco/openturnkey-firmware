@@ -399,7 +399,7 @@ static void nfc_callback(
                     }
                     else {
                         m_nfc_cmd_exec_state = NFC_CMD_EXEC_FAIL;
-                        if (OTK_ERROR_PIN_UNSET == err) {
+                        if (KEY_DEFAULT_PIN == KEY_getPin()) {
                             m_nfc_cmd_failure_reason = NFC_REASON_PIN_UNSET;
                         }
                         else {

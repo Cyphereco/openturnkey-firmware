@@ -264,12 +264,6 @@ static void nfc_callback(
                         return;
                     } 
 
-                    if (m_nfc_output_protect_data && !m_nfc_more_cmd) {
-                        OTK_LOG_DEBUG("Protected data is read, prepare shutdown.");
-                        OTK_shutdown(OTK_ERROR_NO_ERROR, false);
-                        return;
-                    }
-
                     if (m_nfc_cmd_exec_state > 0) {
                         nfc_clearRequest();
                         OTK_pause();
@@ -430,9 +424,18 @@ static void nfc_callback(
             /* Occurs only once per NFC reading. */
             m_nfc_has_read = true;
 
-            if (m_nfc_request_command != NFC_REQUEST_CMD_INVALID && !m_nfc_output_protect_data) {
+            if (m_nfc_request_command != NFC_REQUEST_CMD_INVALID) {
                 NFC_stop(true);
                 OTK_standby();
+
+                if (m_nfc_more_cmd) {
+                    OTK_extend();
+                }
+                else if (m_nfc_output_protect_data) {
+                    NFC_stop(false);
+                    OTK_LOG_DEBUG("Protected data is read, prepare shutdown.");
+                    OTK_shutdown(OTK_ERROR_NO_ERROR, false);
+                }
             }
             break;
 

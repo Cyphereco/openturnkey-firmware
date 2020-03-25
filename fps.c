@@ -315,7 +315,6 @@ OTK_Return FPS_captureAndEnroll(void)
     if (idx < OTK_FINGER_PRINT_MIN_CAPTURE_NUM) {
         /* Failed to capture. */
         LED_on(OTK_LED_RED);
-        nrf_delay_ms(1000);
         FPS_resetSensor();
         return (OTK_RETURN_FAIL);
     }
@@ -350,7 +349,6 @@ OTK_Return FPS_captureAndEnroll(void)
     }
 
     LED_on(ret == OTK_RETURN_FAIL ? OTK_LED_RED : OTK_LED_GREEN);
-    nrf_delay_ms(1000);
     FPS_resetSensor();
 
     return (ret);

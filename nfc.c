@@ -289,12 +289,6 @@ static void nfc_callback(
 
                     static NFC_COMMAND_EXEC_STATE _execState = NFC_CMD_EXEC_SUCCESS;
 
-                    OTK_LOG_DEBUG("Request Received:");
-                    OTK_LOG_DEBUG("Request ID: (%lu)", m_nfc_request_id);
-                    OTK_LOG_DEBUG("Request Command: (%d)", m_nfc_request_command);
-                    OTK_LOG_DEBUG("Request Data: (%d) %s", strlen(m_nfc_request_data_buf), m_nfc_request_data_buf);
-                    OTK_LOG_DEBUG("Request Option: (%d) %s", strlen(m_nfc_request_opt_buf), m_nfc_request_opt_buf);
-
                     if (NFC_REQUEST_CMD_CANCEL == m_nfc_request_command) {
                         m_nfc_cmd_exec_state = NFC_CMD_EXEC_NA;
                         m_nfc_cmd_failure_reason = NFC_REASON_INVALID;                    
@@ -567,6 +561,12 @@ static void nfc_callback(
                     _record_idx++;
                     OTK_extend();
                 } while (dataLength > 0);
+
+                OTK_LOG_DEBUG("Request Received:");
+                OTK_LOG_DEBUG("Request ID: (%lu)", m_nfc_request_id);
+                OTK_LOG_DEBUG("Request Command: (%d)", m_nfc_request_command);
+                OTK_LOG_DEBUG("Request Data: (%d) %s", strlen(m_nfc_request_data_buf), m_nfc_request_data_buf);
+                OTK_LOG_DEBUG("Request Option: (%d) %s", strlen(m_nfc_request_opt_buf), m_nfc_request_opt_buf);
             }                
             break;
         default:

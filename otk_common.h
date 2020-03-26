@@ -22,9 +22,9 @@
 #include "nrf_delay.h"
 
 /**@brief Log error message with NRF_LOG_ERROR and appending funciton name and line number automatically. */
-#define OTK_LOG_ERROR(ERR_MSG, ...)  NRF_LOG_ERROR("%s %d : " ERR_MSG, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define OTK_LOG_ERROR(ERR_MSG, ...)  {NRF_LOG_ERROR("%s %d : " ERR_MSG, __FUNCTION__, __LINE__, ##__VA_ARGS__);nrf_delay_ms(1);}
 /**@brief Log debug message with NRF_LOG_DEBUG and appending funciton name and line number automatically. */
-#define OTK_LOG_DEBUG(DBG_MSG, ...)  NRF_LOG_DEBUG("%s %d : " DBG_MSG, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define OTK_LOG_DEBUG(DBG_MSG, ...)  {NRF_LOG_DEBUG("%s %d : " DBG_MSG, __FUNCTION__, __LINE__, ##__VA_ARGS__);nrf_delay_ms(1);}
 /**@brief Dump hex data and delay 5 ms for completion. */
 #define OTK_LOG_HEXDUMP(hex, len)  {NRF_LOG_RAW_HEXDUMP_INFO(hex, len);nrf_delay_ms(len/8);}
 /**@brief Log info and delay 5 ms for completion. */

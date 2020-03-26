@@ -270,7 +270,7 @@ OTK_Return FPS_captureAndEnroll(void)
 
     /* Exit loop when captured FP meet maximum limit or timeout */
     while(idx < OTK_FINGER_PRINT_MAX_CAPTURE_NUM && failure_count < 5 &&
-        (app_timer_cnt_get() - _startTime) < APP_TIMER_TICKS(5000)) {
+        (app_timer_cnt_get() - _startTime) < APP_TIMER_TICKS(15000)) {
 
         /* Start capture only at FPS is touched */
         if (FPS_isTouched()) {
@@ -439,27 +439,31 @@ uint8_t FPS_captureAndMatch(uint8_t min_matches)
     uint8_t fpId = 0;
     uint8_t _match = 0;
     uint32_t _startTime = app_timer_cnt_get();
+    uint8_t failure_count = 0;
 
     LED_all_off();
     LED_setCadenceType(LED_CAD_FPS_CAPTURING);
     LED_cadence_start();
 
     /* Exit loop when captured FP matched or timeout */
-    while(_match < min_matches && (app_timer_cnt_get() - _startTime) < APP_TIMER_TICKS(10000)) {
+    while(_match < min_matches && 
+        failure_count < 3 &&
+        (app_timer_cnt_get() - _startTime) < APP_TIMER_TICKS(15000)) {
         /* Start capture only at FPS is touched */
         if (FPS_isTouched()) {
             OTK_LOG_DEBUG("FP touched + ")
             if (OTK_RETURN_OK == fps_capture(0)) {
                 fpId = fps_match();
-            }
-            if (fpId > 0 ) {
-                _match++;
-                LED_all_off();
-                LED_on(OTK_LED_GREEN);
-            }
-            else {
-                LED_all_off();
-                LED_on(OTK_LED_RED);
+                if (fpId > 0 ) {
+                    _match++;
+                    LED_all_off();
+                    LED_on(OTK_LED_GREEN);
+                }
+                else {
+                    LED_all_off();
+                    LED_on(OTK_LED_RED);
+                    failure_count++;
+                }
             }
 
             uint8_t _untouchCounter = 0;

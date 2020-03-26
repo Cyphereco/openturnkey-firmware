@@ -269,7 +269,7 @@ OTK_Return FPS_captureAndEnroll(void)
     LED_cadence_start();
 
     /* Exit loop when captured FP meet maximum limit or timeout */
-    while(idx < OTK_FINGER_PRINT_MAX_CAPTURE_NUM && failure_count < 3 &&
+    while(idx < OTK_FINGER_PRINT_MAX_CAPTURE_NUM && failure_count < 5 &&
         (app_timer_cnt_get() - _startTime) < APP_TIMER_TICKS(5000)) {
 
         /* Start capture only at FPS is touched */
@@ -279,6 +279,7 @@ OTK_Return FPS_captureAndEnroll(void)
                 idx++;
                 LED_all_off();
                 LED_on(OTK_LED_GREEN);
+                failure_count = 0;
             }
             else {
                 LED_all_off();
@@ -290,12 +291,12 @@ OTK_Return FPS_captureAndEnroll(void)
             while (_untouchCounter < FPS_TOUCH_DEBOUNCE) {
                 if (FPS_isTouched()) {
                     _untouchCounter = 0;
-                    FPS_resetSensor();
-                    nrf_delay_ms(180);
                 }
                 else {
                     _untouchCounter++;
                 }
+                FPS_resetSensor();
+                nrf_delay_ms(200);
             }
             OTK_LOG_DEBUG("FP released - ")
 
@@ -465,12 +466,12 @@ uint8_t FPS_captureAndMatch(uint8_t min_matches)
             while (_untouchCounter < FPS_TOUCH_DEBOUNCE) {
                 if (FPS_isTouched()) {
                     _untouchCounter = 0;
-                    FPS_resetSensor();
-                    nrf_delay_ms(180);
                 }
                 else {
                     _untouchCounter++;
                 }
+                FPS_resetSensor();
+                nrf_delay_ms(200);
             }
             OTK_LOG_DEBUG("FP relased - ")
 

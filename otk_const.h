@@ -22,7 +22,7 @@
 
 #ifdef OTK_HW_V_1_3
     #define OTK_HW_VER "1.3"
-    #define OTK_FW_VER_CODE "1.4"
+    #define OTK_FW_VER_CODE "1.5"
     #define OTK_FW_VER OTK_FW_VER_CODE"."BUILD_NUM
     #define OTK_MINT_DATE "2019/11/26"
 

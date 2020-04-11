@@ -86,7 +86,7 @@
 #define OTK_LABEL_REQUEST_ID        "Request_ID"
 #define OTK_LABEL_BITCOIN_ADDR      "BTC_Addr"
 #define OTK_LABEL_MASTER_EXT_KEY    "Master_Extended_Key"
-#define OTK_LABEL_DERIVATIVE_EXT_KEY "Derivative_Exteded_Key"
+#define OTK_LABEL_DERIVATIVE_EXT_KEY "Derivative_Extended_Key"
 #define OTK_LABEL_DERIVATIVE_PATH   "Derivative_Path"
 #define OTK_LABEL_WIF_KEY           "WIF_Key"
 #define OTK_LABEL_SECURE_PIN   		"Secure_Pin"

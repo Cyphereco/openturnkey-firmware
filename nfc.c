@@ -444,8 +444,14 @@ static void nfc_callback(
                     switch (_record_idx) {
                         case NFC_REQUEST_DEF_SESSION_ID:
                             _u32val = nfc_strToUint32(_recordPayload_data);
+                            OTK_LOG_DEBUG("Session ID: (%d)", _u32val);
+
+                            if (_u32val <= 0) {
+                                OTK_LOG_ERROR("Invalid request session ID!! (%s)", _recordPayload_data);
+                                _invalidRequest = true;                                
+                            } 
 #ifndef DEBUG                          
-                            if (_u32val != m_nfc_session_id) {
+                            if (!_invalidRequest && _u32val != m_nfc_session_id) {
                                 OTK_LOG_ERROR("Invalid request session ID!! (%s)", _recordPayload_data);
                                 _invalidRequest = true;                                
                             }
@@ -510,7 +516,16 @@ static void nfc_callback(
                     ndef_record_ptr += _descLen;
                     dataLength -= _descLen;
                     _record_idx++;
+
+                    if (dataLength <= 0 && _record_idx < NFC_REQUEST_DEF_COMMAD) {
+                        OTK_LOG_ERROR("Invalid request, prepare OTK shutdown!");
+                        m_nfc_security_shutdown = true;
+                    }
                 } while (dataLength > 0);
+            }
+            else {
+                OTK_LOG_ERROR("Invalid request, prepare OTK shutdown!");
+                m_nfc_security_shutdown = true;               
             }           
             break;
         default:

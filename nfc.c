@@ -132,9 +132,12 @@ static void nfc_process_request() {
     OTK_LOG_DEBUG("Request Received:");
     OTK_LOG_DEBUG("Request ID: (%lu)", m_nfc_request_id);
     OTK_LOG_DEBUG("Request Command: (%d)", m_nfc_request_command);
-    OTK_LOG_DEBUG("Request Data: (%d) %s", strlen(m_nfc_request_data_buf), m_nfc_request_data_buf);
-    OTK_LOG_DEBUG("Request Option: (%d) %s", strlen(m_nfc_request_opt_buf), m_nfc_request_opt_buf);
+    if (strlen(m_nfc_request_data_buf) > 0)
+        OTK_LOG_DEBUG("Request Data (%d): %s", strlen(m_nfc_request_data_buf), m_nfc_request_data_buf);
+    if (strlen(m_nfc_request_opt_buf) > 0)
+        OTK_LOG_DEBUG("Request Option (%d): %s", strlen(m_nfc_request_opt_buf), m_nfc_request_opt_buf);
 
+    nrf_delay_ms(20);
 
     static NFC_COMMAND_EXEC_STATE _execState = NFC_CMD_EXEC_SUCCESS;
 
@@ -218,11 +221,9 @@ static void nfc_process_request() {
     }
     else {
         m_nfc_cmd_exec_state = NFC_CMD_EXEC_FAIL;
-        if (KEY_DEFAULT_PIN == KEY_getPin()) {
+        m_nfc_cmd_failure_reason = NFC_REASON_AUTH_FAILED;                        
+        if (KEY_DEFAULT_PIN == KEY_getPin() && strstr(m_nfc_request_opt_buf, "pin=") != NULL) {
             m_nfc_cmd_failure_reason = NFC_REASON_PIN_UNSET;
-        }
-        else {
-            m_nfc_cmd_failure_reason = NFC_REASON_AUTH_FAILED;                        
         }
         m_nfc_auth_failure_counts++;
 
@@ -432,7 +433,6 @@ static void nfc_callback(
                                                     &_descLen);
                     APP_ERROR_CHECK(errCode);
 
-
                     recordDesc.payload_constructor(recordDesc.p_payload_descriptor, 
                                                     _recordPayload, 
                                                     &_payloadLen);
@@ -444,7 +444,7 @@ static void nfc_callback(
                     switch (_record_idx) {
                         case NFC_REQUEST_DEF_SESSION_ID:
                             _u32val = nfc_strToUint32(_recordPayload_data);
-                            OTK_LOG_DEBUG("Session ID: (%d)", _u32val);
+                            OTK_LOG_DEBUG("Session ID: (%u)", _u32val);
 
                             if (_u32val <= 0) {
                                 OTK_LOG_ERROR("Invalid request session ID!! (%s)", _recordPayload_data);
@@ -523,10 +523,6 @@ static void nfc_callback(
                     }
                 } while (dataLength > 0);
             }
-            else {
-                OTK_LOG_ERROR("Invalid request, prepare OTK shutdown!");
-                m_nfc_security_shutdown = true;               
-            }           
             break;
         default:
             OTK_LOG_ERROR("Unhandled NFC Event - (%0xX)", event);

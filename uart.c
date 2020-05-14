@@ -132,6 +132,20 @@ OTK_Return UART_read(
     errCode = nrf_serial_read(&serial_uart, buf_ptr, readSize, NULL, OTK_FPS_UART_TIMEOUT);
 
     if (errCode != NRF_SUCCESS) {
+        switch (errCode) {
+          case NRF_ERROR_MODULE_NOT_INITIALIZED:
+            OTK_LOG_DEBUG("NRF_ERROR_MODULE_NOT_INITIALIZED");
+            break;
+          case NRF_ERROR_INVALID_STATE:
+            OTK_LOG_DEBUG("NRF_ERROR_INVALID_STATE");
+            break;
+          case NRF_ERROR_BUSY:
+            OTK_LOG_DEBUG("NRF_ERROR_BUSY");
+            break;
+          case NRF_ERROR_TIMEOUT:
+            OTK_LOG_DEBUG("NRF_ERROR_TIMEOUT");
+            break;
+        }
         return (OTK_RETURN_FAIL);
     }
 

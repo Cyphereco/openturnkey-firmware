@@ -39,6 +39,7 @@
  */
 #include "app_error.h"
 
+#include "nrf_delay.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_strerror.h"
@@ -57,9 +58,9 @@ __WEAK void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
     __disable_irq();
     NRF_LOG_FINAL_FLUSH();
 
-#ifndef DEBUG
-    NRF_LOG_ERROR("Fatal error");
-#else
+// #ifndef DEBUG
+//     NRF_LOG_ERROR("Fatal error");
+// #else
     switch (id)
     {
 #if defined(SOFTDEVICE_PRESENT) && SOFTDEVICE_PRESENT
@@ -94,9 +95,10 @@ __WEAK void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
             NRF_LOG_ERROR("UNKNOWN FAULT at 0x%08X", pc);
             break;
     }
-#endif
+// #endif
 
-    NRF_BREAKPOINT_COND;
+    nrf_delay_ms(20);   /* Delay for long data print completion. */
+    // NRF_BREAKPOINT_COND;
     // On assert, the system can only recover with a reset.
 
 #ifndef DEBUG

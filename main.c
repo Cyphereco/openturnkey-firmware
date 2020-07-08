@@ -115,7 +115,12 @@ int main(void)
     int _led = OTK_isLocked() ? OTK_LED_RED : OTK_LED_GREEN;
     int _pwrLvl = OTK_battVoltage();
 
-    if (_pwrLvl < 3550) {
+    if (_pwrLvl <= 3450) {
+        // shutting down OTK for low power protection
+        nrf_delay_ms(1000);
+        OTK_shutdown(OTK_ERROR_NO_ERROR, false);
+    }
+    else if (_pwrLvl < 3550) {
         int i;
         for (i = 0; i < 4; i++) {
             LED_on(_led);

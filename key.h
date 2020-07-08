@@ -41,6 +41,8 @@ typedef struct {
     CRYPTO_derivativePath   path;               /* Derivative Child Key Path */
     CRYPTO_signature        *signature_ptr;     /* Signed Signature */
     uint32_t                pin;                /* PIN Code */
+    uint8_t                 pin_auth_failures;  /* times of pin auth failures */
+    uint32_t                pin_retry_after;    /* time of reboots before pin auth available */
     char                    keyNote[KEY_NOTE_LENGTH + 1];    /* Customized User Note for Key */
 } KEY_Object;
 
@@ -199,6 +201,14 @@ char *KEY_getNote(void);
  */
 OTK_Return KEY_setNote(
     char *note);
+
+uint8_t KEY_getPinAuthFailures();
+
+void KEY_setPinAuthFailures(uint8_t failures);
+
+uint32_t KEY_getPinAuthRetryAfter();
+
+void KEY_setPinAuthRetryAfter(uint32_t retryAfter);
 
 #endif
 

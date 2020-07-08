@@ -128,6 +128,10 @@ OTK_Return FILE_init(void)
 OTK_Return FILE_write(
     bool isCreate, const uint8_t *buff_ptr, int size)
 {
+    if (!_isFdsReady) {
+        return (OTK_RETURN_FAIL);
+    }
+
     ret_code_t errCode;
     fds_record_t _record = {
         .file_id           = FILE_ID,
@@ -180,6 +184,10 @@ OTK_Return FILE_write(
 OTK_Return FILE_load(
     uint8_t *buff_ptr, int *buff_len)
 {
+    if (!_isFdsReady) {
+        return (OTK_RETURN_FAIL);
+    }
+
     ret_code_t         errCode;
     fds_find_token_t   ftok;
     fds_flash_record_t flash_record;

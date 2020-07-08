@@ -30,6 +30,7 @@
 #include "sdk_common.h"
 
 #include "otk.h"
+#include "file.h"
 #include "fps.h"
 #include "key.h"
 #include "led.h"
@@ -120,10 +121,6 @@ OTK_Error OTK_init(void)
     return (OTK_RETURN_OK);
 #endif
 
-#ifndef DISABLE_FPS
-    /* Turn on FPS MCU power. */
-    FPS_powerOn();
-#endif
     /* Initialize SAADC for battery voltage detection. */
     saadc_init();
 
@@ -150,6 +147,20 @@ OTK_Error OTK_init(void)
         nrf_delay_ms(500);
     }
 #endif
+
+    /* Initialize FILE. */  
+    if (FILE_init() != OTK_RETURN_OK) {
+        OTK_LOG_ERROR("FILE_init failed!!");       
+        return (OTK_RETURN_FAIL);
+    }        
+
+#ifndef DISABLE_FPS
+    /* Turn on FPS MCU power. */
+    if (OTK_battVoltage() > 3400) {
+        FPS_powerOn();
+    }
+#endif
+
     /* Initialize App Scheduler. */
     APP_SCHED_INIT(APP_SCHED_MAX_EVENT_SIZE, APP_SCHED_QUEUE_SIZE);
 
@@ -205,6 +216,11 @@ OTK_Error OTK_init(void)
     m_otk_isLocked = (FPS_getUserNum() > 0) ? true : false;
     m_otk_isAuthorized = false;
 #endif
+
+    // reduce PinAuthRetryAfter by 1 and accept PIN auth when reach to 0.
+    if (KEY_getPinAuthFailures() >= 3 && KEY_getPinAuthRetryAfter() > 0) {
+        KEY_setPinAuthRetryAfter(KEY_getPinAuthRetryAfter() - 1);
+    }    
 
     return (_init_error);
 }
@@ -399,6 +415,10 @@ void OTK_fpValidate()
         if (FPS_captureAndMatch(1) > 0) {
             m_otk_isAuthorized = true;
             NFC_stop(true);
+
+            // PIN validated, reset authentication failure protection variables
+            KEY_setPinAuthFailures(0);
+            KEY_setPinAuthRetryAfter(0);            
         }
         else {
             /* Match FP failed, shutdown to protect OTK. */
@@ -500,6 +520,12 @@ OTK_Error OTK_pinValidate(char *strIn)
         return OTK_ERROR_PIN_UNSET;
     }
 
+    if (KEY_getPinAuthFailures() >= 3 && KEY_getPinAuthRetryAfter() > 0) {
+        OTK_LOG_ERROR("PIN authentication suspended until %d reboots.", 
+            KEY_getPinAuthRetryAfter());
+        return OTK_ERROR_INVALID_PIN;
+    }
+
     if (strPos !=NULL) {
         strPos += strlen("pin=");
 
@@ -508,9 +534,19 @@ OTK_Error OTK_pinValidate(char *strIn)
             if (KEY_getPin() == ret) {
                 m_otk_isAuthorized = true;
                 OTK_LOG_DEBUG("PIN Valid!");
+
+                // PIN validated, reset authentication failure protection variables
+                KEY_setPinAuthFailures(0);
+                KEY_setPinAuthRetryAfter(0);
+
                 return OTK_ERROR_NO_ERROR;
             }
         }        
+    }
+
+    if (KEY_getPinAuthFailures() < 32) {
+        KEY_setPinAuthFailures(KEY_getPinAuthFailures() + 1);
+        KEY_setPinAuthRetryAfter(pow(2, KEY_getPinAuthFailures()));
     }
 
     OTK_LOG_ERROR("PIN Invalid: %i", ret);   

@@ -197,12 +197,6 @@ OTK_Return KEY_init()
 {
     OTK_Return ret = OTK_RETURN_FAIL;
 
-    /* Initialize FILE. */  
-    if (FILE_init() != OTK_RETURN_OK) {
-        OTK_LOG_ERROR("FILE_init failed!!");       
-        return (OTK_RETURN_FAIL);
-    }        
-
     /* Try to restore key object from saved file */
     int _len = 0;
     if (FILE_load((uint8_t*)&_keyObj, &_len) == OTK_RETURN_OK) {
@@ -265,6 +259,8 @@ OTK_Return KEY_init()
         }
 
         _keyObj.pin = (KEY_DEFAULT_PIN);
+        _keyObj.pin_auth_failures = 0;
+        _keyObj.pin_retry_after = 0;
 
         memset(_keyObj.keyNote, 0, KEY_NOTE_LENGTH + 1);
 
@@ -275,6 +271,8 @@ OTK_Return KEY_init()
         }
     }
 
+    NRF_LOG_INFO("pin_auth_failures: %d", _keyObj.pin_auth_failures);
+    NRF_LOG_INFO("pin_retry_after: %d\n", _keyObj.pin_retry_after);
     NRF_LOG_INFO("Dupm Master Key:");
     key_dumpKey(_keyObj.master);
     NRF_LOG_INFO("Dupm Derivative Key:");
@@ -334,4 +332,22 @@ OTK_Return KEY_setNote(char *note)
     }
 
     return OTK_RETURN_FAIL;
+}
+
+uint8_t KEY_getPinAuthFailures() {
+    return _keyObj.pin_auth_failures;
+}
+
+void KEY_setPinAuthFailures(uint8_t failures) {
+    _keyObj.pin_auth_failures = failures;
+    key_updateFile();
+}
+
+uint32_t KEY_getPinAuthRetryAfter() {
+    return _keyObj.pin_retry_after;
+}
+
+void KEY_setPinAuthRetryAfter(uint32_t retryAfter) {
+    _keyObj.pin_retry_after = retryAfter;
+    key_updateFile();
 }

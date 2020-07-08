@@ -627,12 +627,12 @@ static OTK_Return nfc_setRecords()
 
     if (m_nfc_cmd_exec_state == NFC_CMD_EXEC_FAIL && 
         m_nfc_cmd_failure_reason == NFC_REASON_AUTH_FAILED && 
-        m_nfc_auth_with_pin == true) {
+        m_nfc_auth_with_pin == true && KEY_getPinAuthRetryAfter() > 0) {
         char *_sigPubKey = KEY_getHexPublicKey(false);
 
         _sessDataLen = sprintf(_sessData, "%s<%s>\r\n%lu\r\n", _sessData, OTK_LABEL_REQUEST_ID, m_nfc_request_id);
         _sessDataLen = sprintf(_sessData, "%s<%s>\r\n%s\r\n", _sessData, OTK_LABEL_PUBLIC_KEY, _sigPubKey);
-        _sessDataLen = sprintf(_sessData, "%s<%s>\r\n%lu\r\n", _sessData, OTK_LABEL_PIN_AUTH_SUSPEND, KEY_getPinAuthRetryAfter());
+        _sessDataLen = sprintf(_sessData, "%s<%s>\r\n%lu\r\n", _sessData, OTK_LABEL_PIN_AUTH_SUSPEND, KEY_getPinAuthRetryAfter() - 1);
     }
     else if (m_nfc_cmd_exec_state == NFC_CMD_EXEC_SUCCESS &&
         (m_nfc_request_command == NFC_REQUEST_CMD_SHOW_KEY ||

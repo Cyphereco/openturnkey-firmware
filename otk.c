@@ -405,6 +405,9 @@ void OTK_resetConfirmed()
     KEY_setNewDerivativePath(&newPath);
     KEY_recalcDerivative();
 
+    KEY_setPinAuthFailures(0);
+    KEY_setPinAuthRetryAfter(0);            
+
     LED_all_off();
     LED_on(OTK_LED_GREEN);
     nrf_delay_ms(1000);

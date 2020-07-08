@@ -156,8 +156,12 @@ OTK_Error OTK_init(void)
 
 #ifndef DISABLE_FPS
     /* Turn on FPS MCU power. */
-    if (OTK_battVoltage() > 3400) {
+    if (OTK_battVoltage() > 3450) {
         FPS_powerOn();
+    }
+    else {
+        // poweroff to keep batter above safe voltage level.
+        OTK_shutdown(OTK_ERROR_NO_ERROR, false);
     }
 #endif
 

@@ -75,6 +75,7 @@ static uint32_t m_nfc_request_id = 0;               /* UINT32 request ID submit 
 static char m_nfc_request_data_buf[NFC_REQUEST_DATA_BUF_SZ];  /* Buffer to store passed in request data. */
 static char m_nfc_request_opt_buf[NFC_REQUEST_OPT_BUF_SZ];    /* Buffer to store passed in request option. */
 
+static bool m_nfc_auth_with_pin = false;
 
 /**
  * @brief Clear stored request command and data
@@ -149,20 +150,26 @@ static void nfc_process_request() {
 
     OTK_Error err = OTK_ERROR_NO_ERROR;
 
-    if (!OTK_isAuthorized() && 
+    if (!OTK_isAuthorized() &&
         strstr(m_nfc_request_opt_buf, "pin=") != NULL &&
         m_nfc_request_command != NFC_REQUEST_CMD_EXPORT_WIF_KEY) {
-        /*
-         * For security concerns, export WIF private key must be authorized by 
-         * Fingerprint, so it will not accept PIN code authoriztion. 
-         */
-        /* Parse Option Params and check if PIN code is submitted and matched
-         * Request Options are order irrelavant params separated by comma
-         * as in the following foramt:
-         * key=0,pin=99999999
-         */
-        err = OTK_pinValidate(m_nfc_request_opt_buf);  
-        OTK_LOG_DEBUG("PIN validation (%d), Error: (%d)", OTK_isAuthorized(), err);
+
+        m_nfc_auth_with_pin = true;
+
+        // if KEY_getPinAuthRetryAfter > 0, pin auth suspended
+        if (KEY_getPinAuthRetryAfter() <= 0) {
+            /*
+             * For security concerns, export WIF private key must be authorized by 
+             * Fingerprint, so it will not accept PIN code authoriztion. 
+             */
+            /* Parse Option Params and check if PIN code is submitted and matched
+             * Request Options are order irrelavant params separated by comma
+             * as in the following foramt:
+             * key=0,pin=99999999
+             */
+            err = OTK_pinValidate(m_nfc_request_opt_buf);  
+            OTK_LOG_DEBUG("PIN validation (%d), Error: (%d)", OTK_isAuthorized(), err);
+        }
     }
 
     if (OTK_isAuthorized() || NFC_REQUEST_CMD_RESET == m_nfc_request_command) {
@@ -618,7 +625,16 @@ static OTK_Return nfc_setRecords()
 
     _sessDataLen = sprintf(_sessData, "%s<%s>\r\n%s\r\n", _sessData, OTK_LABEL_BITCOIN_ADDR, KEY_getBtcAddr(KEY_DERIVATIVE));
 
-    if (m_nfc_cmd_exec_state == NFC_CMD_EXEC_SUCCESS &&
+    if (m_nfc_cmd_exec_state == NFC_CMD_EXEC_FAIL && 
+        m_nfc_cmd_failure_reason == NFC_REASON_AUTH_FAILED && 
+        m_nfc_auth_with_pin == true) {
+        char *_sigPubKey = KEY_getHexPublicKey(false);
+
+        _sessDataLen = sprintf(_sessData, "%s<%s>\r\n%lu\r\n", _sessData, OTK_LABEL_REQUEST_ID, m_nfc_request_id);
+        _sessDataLen = sprintf(_sessData, "%s<%s>\r\n%s\r\n", _sessData, OTK_LABEL_PUBLIC_KEY, _sigPubKey);
+        _sessDataLen = sprintf(_sessData, "%s<%s>\r\n%lu\r\n", _sessData, OTK_LABEL_PIN_AUTH_SUSPEND, KEY_getPinAuthRetryAfter());
+    }
+    else if (m_nfc_cmd_exec_state == NFC_CMD_EXEC_SUCCESS &&
         (m_nfc_request_command == NFC_REQUEST_CMD_SHOW_KEY ||
         m_nfc_request_command == NFC_REQUEST_CMD_SIGN ||
         m_nfc_request_command == NFC_REQUEST_CMD_EXPORT_WIF_KEY)) {
@@ -746,6 +762,8 @@ static OTK_Return nfc_setRecords()
     OTK_LOG_RAW_INFO("\r\n==  NFC Records End  ==\r\n");
 
     errCode = nfc_ndef_msg_encode(_ndef_msg_desc_ptr, m_ndef_msg_buf, &_ndef_msg_len);
+
+    m_nfc_auth_with_pin = false;
 
     APP_ERROR_CHECK(errCode);
     if (errCode != NRF_SUCCESS) {

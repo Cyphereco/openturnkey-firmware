@@ -92,6 +92,7 @@
 #define OTK_LABEL_SECURE_PIN   		"Secure_Pin"
 #define OTK_LABEL_REQUEST_SIG       "Request_Signature"
 #define OTK_LABEL_SESSION_SIG       "Session_Signature"
+#define OTK_LABEL_PIN_AUTH_SUSPEND  "PIN_Suspend"
 
 
 /* Return value enumeration. */
@@ -123,6 +124,7 @@ typedef enum {
     OTK_ERROR_INVALID_KEYPATH,
     OTK_ERROR_NOTE_TOO_LONG,
     OTK_ERROR_SCHED_ERROR,
+    OTK_ERROR_LOW_POWER_DOWN,
     OTK_ERROR_UNKNOWN
 } OTK_Error;
 #endif

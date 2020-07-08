@@ -138,16 +138,6 @@ OTK_Error OTK_init(void)
     /* Unitialize SAADC after voltage deteced. */
     nrf_drv_saadc_uninit();
 
-#if 0
-    if (m_batt_lvl_in_milli_volts < 3500) {
-        LED_on(OTK_LED_RED);
-        LED_on(OTK_LED_GREEN);
-        nrf_delay_ms(2000);
-        LED_all_off();
-        nrf_delay_ms(500);
-    }
-#endif
-
     /* Initialize FILE. */  
     if (FILE_init() != OTK_RETURN_OK) {
         OTK_LOG_ERROR("FILE_init failed!!");       
@@ -156,12 +146,12 @@ OTK_Error OTK_init(void)
 
 #ifndef DISABLE_FPS
     /* Turn on FPS MCU power. */
-    if (OTK_battVoltage() > 3450) {
+    if (OTK_battVoltage() > 3500) {
         FPS_powerOn();
     }
     else {
         // poweroff to keep batter above safe voltage level.
-        OTK_shutdown(OTK_ERROR_NO_ERROR, false);
+        OTK_shutdown(OTK_ERROR_LOW_POWER_DOWN, false);
     }
 #endif
 
@@ -280,6 +270,22 @@ void OTK_clearAuth() {
 }
 
 void OTK_cease(OTK_Error err) {
+    if (err == OTK_ERROR_LOW_POWER_DOWN) {
+        UART_uninit();
+        /* Reset all GPIO pin positions. */
+        nrf_gpio_cfg_default(OTK_LED_BLUE);
+        nrf_gpio_cfg_default(OTK_LED_GREEN);
+        nrf_gpio_cfg_default(OTK_LED_RED);
+        nrf_gpio_cfg_default(OTK_PIN_FPS_TOUCHED);
+        nrf_gpio_cfg_default(OTK_PIN_FPS_PWR_EN);
+        nrf_gpio_cfg_default(OTK_PIN_FPS_UART_RX);
+        nrf_gpio_cfg_default(OTK_PIN_FPS_UART_TX);
+
+        OTK_LOG_RAW_INFO("\r\n\r\n>>> GOOD BYE! OTK SHUTTING DOWN! <<<\r\n\r\n");
+
+        return;
+    }
+
     OTK_pause();
     NFC_forceStop();
 #ifndef DISABLE_FPS    
@@ -548,9 +554,12 @@ OTK_Error OTK_pinValidate(char *strIn)
         }        
     }
 
-    if (KEY_getPinAuthFailures() < 32) {
+    if ( KEY_getPinAuthFailures() < 32) {
         KEY_setPinAuthFailures(KEY_getPinAuthFailures() + 1);
-        KEY_setPinAuthRetryAfter(pow(2, KEY_getPinAuthFailures()));
+
+        if (KEY_getPinAuthFailures() >= 3) {
+            KEY_setPinAuthRetryAfter(pow(2, KEY_getPinAuthFailures()));
+        }
     }
 
     OTK_LOG_ERROR("PIN Invalid: %i", ret);   
@@ -579,14 +588,14 @@ OTK_Error OTK_setNote(char *str)
 char* OTK_battLevel()
 {
     return (m_batt_lvl_in_milli_volts > 4000 ? "100%" :
-        m_batt_lvl_in_milli_volts > 3920 ? "90%" :
-        m_batt_lvl_in_milli_volts > 3860 ? "80%" :
-        m_batt_lvl_in_milli_volts > 3800 ? "70%" :
-        m_batt_lvl_in_milli_volts > 3725 ? "60%" :
-        m_batt_lvl_in_milli_volts > 3650 ? "50%" :
-        m_batt_lvl_in_milli_volts > 3635 ? "40%" :
+        m_batt_lvl_in_milli_volts > 3940 ? "90%" :
+        m_batt_lvl_in_milli_volts > 3880 ? "80%" :
+        m_batt_lvl_in_milli_volts > 3820 ? "70%" :
+        m_batt_lvl_in_milli_volts > 3750 ? "60%" :
+        m_batt_lvl_in_milli_volts > 3680 ? "50%" :
+        m_batt_lvl_in_milli_volts > 3640 ? "40%" :
         m_batt_lvl_in_milli_volts > 3620 ? "30%" :
-        m_batt_lvl_in_milli_volts > 3550 ? "20%" : "10%");
+        m_batt_lvl_in_milli_volts > 3580 ? "20%" : "10%");
 }
 
 uint16_t OTK_battVoltage()

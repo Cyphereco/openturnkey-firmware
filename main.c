@@ -115,23 +115,29 @@ int main(void)
     int _led = OTK_isLocked() ? OTK_LED_RED : OTK_LED_GREEN;
     int _pwrLvl = OTK_battVoltage();
 
-    if (_pwrLvl < 3580) {
-        int i;
-        for (i = 0; i < 4; i++) {
-            LED_on(_led);
-            nrf_delay_ms(200);
-            LED_all_off();
-            nrf_delay_ms(50);
-        }
+    if (OTK_battVoltage() < 3500) {
+        // poweroff to keep batter above safe voltage level.
+        OTK_shutdown(OTK_ERROR_LOW_POWER_DOWN, false);
     }
     else {
-        LED_on(_led);
-        nrf_delay_ms(1000);
-        LED_all_off();
-    }
+        if (_pwrLvl < 3580) {
+            int i;
+            for (i = 0; i < 4; i++) {
+                LED_on(_led);
+                nrf_delay_ms(200);
+                LED_all_off();
+                nrf_delay_ms(50);
+            }
+        }
+        else {
+            LED_on(_led);
+            nrf_delay_ms(1000);
+            LED_all_off();
+        }
 
-    NFC_start();
-    OTK_standby();
+        NFC_start();
+        OTK_standby();
+    }
 
     while (1)
     {

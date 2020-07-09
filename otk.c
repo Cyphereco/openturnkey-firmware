@@ -138,22 +138,16 @@ OTK_Error OTK_init(void)
     /* Unitialize SAADC after voltage deteced. */
     nrf_drv_saadc_uninit();
 
+#ifndef DISABLE_FPS
+    /* Turn on FPS MCU power. */
+    FPS_powerOn();
+#endif
+
     /* Initialize FILE. */  
     if (FILE_init() != OTK_RETURN_OK) {
         OTK_LOG_ERROR("FILE_init failed!!");       
         return (OTK_RETURN_FAIL);
     }        
-
-#ifndef DISABLE_FPS
-    /* Turn on FPS MCU power. */
-    if (OTK_battVoltage() > 3500) {
-        FPS_powerOn();
-    }
-    else {
-        // poweroff to keep batter above safe voltage level.
-        OTK_shutdown(OTK_ERROR_LOW_POWER_DOWN, false);
-    }
-#endif
 
     /* Initialize App Scheduler. */
     APP_SCHED_INIT(APP_SCHED_MAX_EVENT_SIZE, APP_SCHED_QUEUE_SIZE);
@@ -271,7 +265,7 @@ void OTK_clearAuth() {
 
 void OTK_cease(OTK_Error err) {
     if (err == OTK_ERROR_LOW_POWER_DOWN) {
-        UART_uninit();
+        // UART_uninit();
         /* Reset all GPIO pin positions. */
         nrf_gpio_cfg_default(OTK_LED_BLUE);
         nrf_gpio_cfg_default(OTK_LED_GREEN);
